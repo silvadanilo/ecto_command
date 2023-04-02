@@ -27,6 +27,12 @@ defmodule CommandEx.Command do
       Module.register_attribute(__MODULE__, :internal_fields, accumulate: true)
       Module.register_attribute(__MODULE__, :validators, accumulate: true)
       Module.register_attribute(__MODULE__, :trim_fields, accumulate: true)
+    end
+  end
+
+  @doc false
+  defmacro __before_compile__(_env) do
+    quote unquote: false do
 
       def new(attributes) do
         attributes
@@ -37,17 +43,12 @@ defmodule CommandEx.Command do
       def changeset(%{} = params) do
         __MODULE__
         |> struct!(%{})
-        |> cast(params, __schema__(:cast_fields))
+        |> cast(params, @cast_fields)
         |> trim_fields()
         |> validate()
       end
-    end
-  end
 
-  @doc false
-  defmacro __before_compile__(_env) do
-    quote unquote: false do
-      def execute(%{} = attributes) do
+      def execute(%{} = attributes) when is_map(attributes) do
         with {:ok, command} <- new(attributes) do
           command
           |> execute()
@@ -73,10 +74,6 @@ defmodule CommandEx.Command do
 
     postlude =
       quote unquote: false do
-        internal_fields = @internal_fields |> Enum.reverse()
-        cast_fields = @cast_fields |> Enum.reverse()
-        validators = @validators |> Enum.reverse()
-
         validator_ast =
           Enum.reduce(@validators, quote(do: changeset), fn
             {:{}, [], [:change, field, {metadata, validator_fn}]}, acc ->
@@ -109,10 +106,6 @@ defmodule CommandEx.Command do
         def trim_fields(changeset) do
           unquote(trim_fields_ast)
         end
-
-        def __schema__(:internal_fields), do: unquote(internal_fields)
-        def __schema__(:cast_fields), do: unquote(cast_fields)
-        def __schema__(:validators), do: unquote(validators)
       end
 
     quote do
