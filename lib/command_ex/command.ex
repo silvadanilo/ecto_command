@@ -27,6 +27,11 @@ defmodule CommandEx.Command do
       Module.register_attribute(__MODULE__, :internal_fields, accumulate: true)
       Module.register_attribute(__MODULE__, :validators, accumulate: true)
       Module.register_attribute(__MODULE__, :trim_fields, accumulate: true)
+
+      @doc false
+      def set(_, changeset, _params), do: changeset
+
+      defoverridable set: 3
     end
   end
 
@@ -43,6 +48,7 @@ defmodule CommandEx.Command do
         __MODULE__
         |> struct!(%{})
         |> cast(params, @cast_fields)
+        |> __set_internal_fields()
         |> __trim_fields()
         |> __validate()
       end
@@ -52,6 +58,15 @@ defmodule CommandEx.Command do
           command
           |> execute()
         end
+      end
+
+      def __set_internal_fields(changeset) do
+        Enum.reduce(Enum.reverse(@internal_fields), changeset, fn field, changeset ->
+          case apply(__MODULE__, :set, [field, changeset, changeset.params]) do
+            %Ecto.Changeset{} = changeset -> changeset
+            value -> put_change(changeset, field, value)
+          end
+        end)
       end
     end
   end

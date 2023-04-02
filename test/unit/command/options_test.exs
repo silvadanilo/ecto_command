@@ -17,6 +17,26 @@ defmodule Unit.CommandEx.Command.OptionsTest do
       assert true == Map.has_key?(changeset.changes, :name)
       assert false == Map.has_key?(changeset.changes, :surname)
     end
+
+    test "a field with :internal could be set by set function" do
+      module_name = String.to_atom("Sample#{:rand.uniform(999_999)}")
+
+      defmodule module_name do
+        use CommandEx.Command, resource_type: "Sample", resource_id: :id
+
+        command do
+          field :name, :string
+          field :surname, :string, internal: true
+        end
+
+        def set(:surname, changeset, params) do
+          "my custom set: #{changeset.changes.name} #{params["surname"]}"
+        end
+      end
+
+      changeset = module_name.changeset(%{name: "foo", surname: "bar"})
+      assert %{name: "foo", surname: "my custom set: foo bar"} == changeset.changes
+    end
   end
 
   describe ":trim option" do
