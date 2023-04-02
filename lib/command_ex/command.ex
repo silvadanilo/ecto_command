@@ -17,7 +17,7 @@ defmodule CommandEx.Command do
   defmacro __using__(_) do
     quote do
       import CommandEx.Command,
-        only: [command: 1, command_field: 1, command_field: 2, command_field: 3]
+        only: [command: 1, command_field: 1, command_field: 2, command_field: 3, extra_validator: 1, extra_validator: 2]
 
       import Ecto.Changeset
 
@@ -33,7 +33,6 @@ defmodule CommandEx.Command do
   @doc false
   defmacro __before_compile__(_env) do
     quote unquote: false do
-
       def new(attributes) do
         attributes
         |> changeset()
@@ -44,8 +43,8 @@ defmodule CommandEx.Command do
         __MODULE__
         |> struct!(%{})
         |> cast(params, @cast_fields)
-        |> trim_fields()
-        |> validate()
+        |> __trim_fields()
+        |> __validate()
       end
 
       def execute(%{} = attributes) when is_map(attributes) do
@@ -92,9 +91,12 @@ defmodule CommandEx.Command do
                         unquote(field),
                         unquote(options)
                       )
+
+            {:extra, function, opts}, acc ->
+              quote do: unquote(function).(unquote(acc), unquote(opts))
           end)
 
-        def validate(changeset) do
+        def __validate(changeset) do
           unquote(validator_ast)
         end
 
@@ -103,7 +105,7 @@ defmodule CommandEx.Command do
             field, acc -> quote do: update_change(unquote(acc), unquote(field), &CommandEx.Command.trim/1)
           end)
 
-        def trim_fields(changeset) do
+        def __trim_fields(changeset) do
           unquote(trim_fields_ast)
         end
       end
@@ -111,6 +113,12 @@ defmodule CommandEx.Command do
     quote do
       unquote(prelude)
       unquote(postlude)
+    end
+  end
+
+  defmacro extra_validator(function, opts \\ []) do
+    quote do
+      Module.put_attribute(__MODULE__, :validators, {:extra, unquote(function), unquote(opts)})
     end
   end
 
