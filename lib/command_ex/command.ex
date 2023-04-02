@@ -90,7 +90,10 @@ defmodule CommandEx.Command do
       quote unquote: false do
         validator_ast =
           Enum.reduce(@validators, quote(do: changeset), fn
-            {:{}, [], [:change, field, {metadata, validator_fn}]}, acc ->
+            {:extra, function, opts}, acc ->
+              quote do: unquote(function).(unquote(acc), unquote(opts))
+
+            {field, :change, {metadata, validator_fn}}, acc ->
               quote do:
                       unquote(acc)
                       |> unquote(String.to_atom("validate_change"))(
@@ -99,16 +102,13 @@ defmodule CommandEx.Command do
                         unquote(validator_fn)
                       )
 
-            {:{}, [], [validator, field, options]}, acc ->
+            {field, validator, options}, acc ->
               quote do:
                       unquote(acc)
                       |> unquote(String.to_atom("validate_#{Atom.to_string(validator)}"))(
                         unquote(field),
                         unquote(options)
                       )
-
-            {:extra, function, opts}, acc ->
-              quote do: unquote(function).(unquote(acc), unquote(opts))
           end)
 
         def __validate(changeset) do
@@ -163,7 +163,7 @@ defmodule CommandEx.Command do
           Module.put_attribute(
             __MODULE__,
             :validators,
-            Macro.escape({validator, unquote(name), parsed_opts})
+            {unquote(name), validator, Macro.escape(parsed_opts)}
           )
         end
       end)
