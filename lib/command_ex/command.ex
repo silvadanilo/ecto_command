@@ -41,7 +41,6 @@ defmodule CommandEx.Command do
         |> trim_fields()
         |> validate()
       end
-
     end
   end
 
@@ -57,9 +56,7 @@ defmodule CommandEx.Command do
     end
   end
 
-  def parse_block({:__block__, context, block}),
-    do: {:__block__, context, Enum.map(block, &parse_block/1)}
-
+  def parse_block({:__block__, context, block}), do: {:__block__, context, Enum.map(block, &parse_block/1)}
   def parse_block({:field, context, data}), do: {:command_field, context, data}
   def parse_block(block), do: block
 
@@ -106,8 +103,7 @@ defmodule CommandEx.Command do
 
         trim_fields_ast =
           Enum.reduce(@trim_fields, quote(do: changeset), fn
-            field, acc ->
-            quote do: update_change(unquote(acc), unquote(field), &CommandEx.Command.trim/1)
+            field, acc -> quote do: update_change(unquote(acc), unquote(field), &CommandEx.Command.trim/1)
           end)
 
         def trim_fields(changeset) do
@@ -136,7 +132,11 @@ defmodule CommandEx.Command do
       end
 
       if opts[:trim] == true do
-        Module.put_attribute(__MODULE__, :trim_fields, unquote(name))
+        if unquote(type) == :string do
+          Module.put_attribute(__MODULE__, :trim_fields, unquote(name))
+        else
+          raise ArgumentError, "trim option can only be used with string fields, got: #{inspect(unquote(type))}"
+        end
       end
 
       unquote(@valid_validators)
@@ -161,6 +161,6 @@ defmodule CommandEx.Command do
     end
   end
 
-  def trim(nil), do: nil
   def trim(string) when is_binary(string), do: String.trim(string)
+  def trim(any), do: any
 end

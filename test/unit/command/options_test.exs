@@ -30,5 +30,15 @@ defmodule Unit.CommandEx.Command.OptionsTest do
 
       assert {:ok, %{name: "foo", surname: "  bar  "}} = module_name.new(%{name: "  foo  ", surname: "  bar  "})
     end
+
+    test "only :string fields could have the :trim option" do
+      module_name = String.to_atom("Sample#{:rand.uniform(999_999)}")
+
+      assert_raise(ArgumentError, ~r/with string fields/, fn ->
+        define_a_module_with_fields module_name do
+          field :age, :integer, trim: true
+        end
+      end)
+    end
   end
 end

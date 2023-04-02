@@ -11,8 +11,7 @@ defmodule Unit.CommandEx.Command.ValidatorsTest do
       define_a_module_with_fields module_name do
         field :name, :string, change: &unquote(__MODULE__).always_invalid/2
 
-        field :surname, :string,
-          change: {{:my_validator, [min: 2]}, &unquote(__MODULE__).always_valid/2}
+        field :surname, :string, change: {{:my_validator, [min: 2]}, &unquote(__MODULE__).always_valid/2}
       end
 
       assert [surname: {:my_validator, [min: 2]}] == defined_validators(module_name),
