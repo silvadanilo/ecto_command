@@ -2,9 +2,12 @@ defmodule CommandEx.OpenApi do
   @moduledoc false
 
   @doc false
-  defmacro __using__(_) do
-    quote do
-      @before_compile unquote(__MODULE__)
+  defmacro __using__(opts \\ []) do
+    quote bind_quoted: [opts: opts, module: __MODULE__] do
+      alias CommandEx.OpenApi.Type
+
+      @commandex_openapi_options opts
+      @before_compile module
     end
   end
 
@@ -27,8 +30,8 @@ defmodule CommandEx.OpenApi do
           end)
 
         %OpenApiSpex.Schema{
-          title: "CreatePost",
-          type: :object,
+          title: @commandex_openapi_options[:title] || __MODULE__,
+          type: @commandex_openapi_options[:type] || :object,
           properties: properties,
           required: required
         }
