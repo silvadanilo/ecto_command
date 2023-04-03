@@ -23,8 +23,16 @@ defmodule Unit.CommandEx.Command.ExtraValidatorsTest do
     define_a_module_with_fields module_name do
       field :name, :string
       field :surname, :string
-      extra_validator(&Unit.CommandEx.Command.ExtraValidatorsTest.custom_validation/2, field: :name, message: "my custom message")
-      extra_validator(&Unit.CommandEx.Command.ExtraValidatorsTest.custom_validation/2, field: :surname, message: "my custom message")
+
+      extra_validator(&Unit.CommandEx.Command.ExtraValidatorsTest.custom_validation/2,
+        field: :name,
+        message: "my custom message"
+      )
+
+      extra_validator(&Unit.CommandEx.Command.ExtraValidatorsTest.custom_validation/2,
+        field: :surname,
+        message: "my custom message"
+      )
     end
 
     changeset = module_name.changeset(%{name: "foo", surname: "bar"})

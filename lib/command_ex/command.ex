@@ -1,5 +1,5 @@
 defmodule CommandEx.Command do
-  @command_options [:internal, :trim]
+  @command_options [:internal, :trim, :doc]
   @valid_validators [
     :acceptance,
     :change,
@@ -27,6 +27,7 @@ defmodule CommandEx.Command do
       Module.register_attribute(__MODULE__, :internal_fields, accumulate: true)
       Module.register_attribute(__MODULE__, :validators, accumulate: true)
       Module.register_attribute(__MODULE__, :trim_fields, accumulate: true)
+      Module.register_attribute(__MODULE__, :command_fields, accumulate: true)
 
       @doc false
       def set(_, changeset, _params), do: changeset
@@ -140,6 +141,8 @@ defmodule CommandEx.Command do
   defmacro command_field(name, type \\ :string, opts \\ []) do
     quote do
       opts = unquote(opts)
+
+      Module.put_attribute(__MODULE__, :command_fields, {unquote(name), unquote(type), opts})
 
       if opts[:internal] == true do
         Module.put_attribute(__MODULE__, :internal_fields, unquote(name))

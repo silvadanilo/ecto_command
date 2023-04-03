@@ -36,6 +36,7 @@ defmodule CommandEx.MixProject do
   defp deps do
     [
       {:ecto_sql, "~> 3.6"},
+      {:open_api_spex, "~> 3.16"},
 
       # test
       {:excoveralls, "~> 0.15.3", only: [:dev, :test]}
