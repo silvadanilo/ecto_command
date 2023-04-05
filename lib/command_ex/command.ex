@@ -1,4 +1,6 @@
 defmodule CommandEx.Command do
+  @moduledoc false
+
   @command_options [:internal, :trim, :doc]
   @valid_validators [
     :acceptance,
@@ -28,6 +30,7 @@ defmodule CommandEx.Command do
       Module.register_attribute(__MODULE__, :validators, accumulate: true)
       Module.register_attribute(__MODULE__, :trim_fields, accumulate: true)
       Module.register_attribute(__MODULE__, :command_fields, accumulate: true)
+      Module.register_attribute(__MODULE__, :middlewares, accumulate: true)
 
       @doc false
       def set(_, changeset, _params), do: changeset
@@ -55,9 +58,18 @@ defmodule CommandEx.Command do
       end
 
       def execute(%{} = attributes) when is_map(attributes) do
-        with {:ok, command} <- new(attributes) do
+        with {:ok, command} <- new(attributes),
+             {:ok, command} <- before_execution(command) do
           command
           |> execute()
+          |> case do
+            {:error, error} ->
+              after_failure(:error, {:error, error}, command)
+            result ->
+              after_execution(result, command)
+          end
+        else
+          {:error, error} -> after_failure(:invalid, {:error, error}, attributes)
         end
       end
 
@@ -66,6 +78,33 @@ defmodule CommandEx.Command do
           case apply(__MODULE__, :set, [field, changeset, changeset.params]) do
             %Ecto.Changeset{} = changeset -> changeset
             value -> put_change(changeset, field, value)
+          end
+        end)
+      end
+
+      defp before_execution(command) do
+        Enum.reduce_while(Enum.reverse(@middlewares), {:ok, command}, fn {middleware, opts}, {:ok, command} ->
+          case apply(middleware, :before_execution, [command, opts]) do
+            {:ok, command} -> {:cont, {:ok, command}}
+            {:error, error} -> {:halt, {:error, error}}
+          end
+        end)
+      end
+
+      defp after_execution(result, command) do
+        Enum.reduce_while(@middlewares, result, fn {middleware, opts}, result ->
+          case apply(middleware, :after_execution, [result, command, opts]) do
+            {:halt, result} -> {:halt, result}
+            result -> {:cont, result}
+          end
+        end)
+      end
+
+      defp after_failure(kind, result, attributes) do
+        Enum.reduce_while(@middlewares, result, fn {middleware, opts}, result ->
+          case apply(middleware, :after_failure, [kind, result, attributes, opts]) do
+            {:halt, result} -> {:halt, result}
+            result -> {:cont, result}
           end
         end)
       end
