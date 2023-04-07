@@ -1,7 +1,7 @@
 defmodule CommandEx.Middleware.Audit do
   @moduledoc false
 
-  #FIXME:! implement interface
+  # FIXME:! implement interface
 
   @doc false
   defmacro __using__(opts \\ []) do

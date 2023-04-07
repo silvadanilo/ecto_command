@@ -32,7 +32,10 @@ defmodule CommandEx.Middleware do
       end
   """
 
-  @callback before_execution(command :: struct(), opts :: Keyword.t()) :: {:ok, struct()} | {:error, any()} | {:halt, any()}
-  @callback after_execution(result :: any(), command :: struct(), opts :: Keyword.t()) :: {:ok, any()} | {:error, any()} | {:halt, any()}
-  @callback after_failure(kind :: atom(), result :: any(), command :: struct() | map(), opts :: Keyword.t()) :: {:error, any()}
+  @callback before_execution(command :: struct(), opts :: Keyword.t()) ::
+              {:ok, struct()} | {:error, any()} | {:halt, any()}
+  @callback after_execution(result :: any(), command :: struct(), opts :: Keyword.t()) ::
+              {:ok, any()} | {:error, any()} | {:halt, any()}
+  @callback after_failure(kind :: atom(), result :: any(), command :: struct() | map(), opts :: Keyword.t()) ::
+              {:error, any()}
 end

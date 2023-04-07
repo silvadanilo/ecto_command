@@ -65,6 +65,7 @@ defmodule CommandEx.Command do
           |> case do
             {:error, error} ->
               after_failure(:error, {:error, error}, command)
+
             result ->
               after_execution(result, command)
           end
@@ -220,5 +221,4 @@ defmodule CommandEx.Command do
   end
 
   def trim(string) when is_binary(string), do: String.trim(string)
-  def trim(any), do: any
 end

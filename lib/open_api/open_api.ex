@@ -100,9 +100,4 @@ defmodule CommandEx.OpenApi do
   end
 
   def schema_for({:required, _}, acc), do: acc
-
-  def schema_for(validator, acc) do
-    IO.inspect(validator)
-    acc
-  end
 end

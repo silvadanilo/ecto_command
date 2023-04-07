@@ -51,7 +51,7 @@ defmodule Unit.CommandEx.Command.MiddlewareTest do
     defp store_call(kind, middleware_name) do
       kind
       |> Process.get([])
-      |> then(& Process.put(kind, &1 ++ [middleware_name]))
+      |> then(&Process.put(kind, &1 ++ [middleware_name]))
     end
   end
 
