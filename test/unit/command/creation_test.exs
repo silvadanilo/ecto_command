@@ -9,8 +9,8 @@ defmodule Unit.CommandEx.Command.CreationTest do
       module_name = String.to_atom("Sample#{:rand.uniform(999_999)}")
 
       define_a_module_with_fields module_name do
-        field :name, :string, required: true
-        field :surname, :string, required: true
+        param :name, :string, required: true
+        param :surname, :string, required: true
       end
 
       assert {:ok, struct!(module_name, %{name: "foo", surname: "bar"})} ==
@@ -21,9 +21,9 @@ defmodule Unit.CommandEx.Command.CreationTest do
       module_name = String.to_atom("Sample#{:rand.uniform(999_999)}")
 
       define_a_module_with_fields module_name do
-        field :name, :string, required: true, length: [min: 10, max: 99]
-        field :surname, :string, required: true, length: [min: 10, max: 99]
-        field :age, :integer, number: [greater_than_or_equal_to: 18]
+        param :name, :string, required: true, length: [min: 10, max: 99]
+        param :surname, :string, required: true, length: [min: 10, max: 99]
+        param :age, :integer, number: [greater_than_or_equal_to: 18]
       end
 
       assert {:error, changeset} = module_name.new(%{name: "foo", age: 15})

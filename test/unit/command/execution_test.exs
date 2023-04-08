@@ -12,8 +12,8 @@ defmodule Unit.CommandEx.Command.ExecutionTest do
         use CommandEx.Command
 
         command do
-          field :name, :string, required: true
-          field :surname, :string, required: true
+          param :name, :string, required: true
+          param :surname, :string, required: true
         end
 
         def execute(%__MODULE__{} = _command) do

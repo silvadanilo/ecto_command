@@ -5,12 +5,12 @@ defmodule Unit.CommandEx.Command.OptionsTest do
   use CommandEx.Test.CommandCase
 
   describe ":internal option" do
-    test "a field with :internal option is not casted" do
+    test "an internal field is not casted" do
       module_name = String.to_atom("Sample#{:rand.uniform(999_999)}")
 
       define_a_module_with_fields module_name do
-        field :name, :string
-        field :surname, :string, internal: true
+        param :name, :string
+        internal :surname, :string
       end
 
       changeset = module_name.changeset(%{name: "foo", surname: "bar"})
@@ -18,15 +18,15 @@ defmodule Unit.CommandEx.Command.OptionsTest do
       assert false == Map.has_key?(changeset.changes, :surname)
     end
 
-    test "a field with :internal could be set by set function" do
+    test "an internal field could be set by the set function" do
       module_name = String.to_atom("Sample#{:rand.uniform(999_999)}")
 
       defmodule module_name do
         use CommandEx.Command, resource_type: "Sample", resource_id: :id
 
         command do
-          field :name, :string
-          field :surname, :string, internal: true
+          param :name, :string
+          internal :surname, :string
         end
 
         def set(:surname, changeset, params) do
@@ -44,8 +44,8 @@ defmodule Unit.CommandEx.Command.OptionsTest do
       module_name = String.to_atom("Sample#{:rand.uniform(999_999)}")
 
       define_a_module_with_fields module_name do
-        field :name, :string, trim: true
-        field :surname, :string, trim: false
+        param :name, :string, trim: true
+        param :surname, :string, trim: false
       end
 
       assert {:ok, %{name: "foo", surname: "  bar  "}} = module_name.new(%{name: "  foo  ", surname: "  bar  "})
@@ -56,7 +56,7 @@ defmodule Unit.CommandEx.Command.OptionsTest do
 
       assert_raise(ArgumentError, ~r/with string fields/, fn ->
         define_a_module_with_fields module_name do
-          field :age, :integer, trim: true
+          param :age, :integer, trim: true
         end
       end)
     end

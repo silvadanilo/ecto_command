@@ -8,8 +8,8 @@ defmodule Unit.CommandEx.Command.ExtraValidatorsTest do
     module_name = String.to_atom("Sample#{:rand.uniform(999_999)}")
 
     define_a_module_with_fields module_name do
-      field :name, :string
-      field :surname, :string
+      param :name, :string
+      param :surname, :string
       extra_validator(&Unit.CommandEx.Command.ExtraValidatorsTest.custom_validation/2)
     end
 
@@ -21,8 +21,8 @@ defmodule Unit.CommandEx.Command.ExtraValidatorsTest do
     module_name = String.to_atom("Sample#{:rand.uniform(999_999)}")
 
     define_a_module_with_fields module_name do
-      field :name, :string
-      field :surname, :string
+      param :name, :string
+      param :surname, :string
 
       extra_validator(&Unit.CommandEx.Command.ExtraValidatorsTest.custom_validation/2,
         field: :name,

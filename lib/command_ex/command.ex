@@ -19,7 +19,7 @@ defmodule CommandEx.Command do
   defmacro __using__(_) do
     quote do
       import CommandEx.Command,
-        only: [command: 1, command_field: 1, command_field: 2, command_field: 3, extra_validator: 1, extra_validator: 2]
+        only: [command: 1, param: 1, param: 2, param: 3, extra_validator: 1, extra_validator: 2, internal: 2, internal: 3]
 
       import Ecto.Changeset
 
@@ -128,7 +128,6 @@ defmodule CommandEx.Command do
   end
 
   def parse_block({:__block__, context, block}), do: {:__block__, context, Enum.map(block, &parse_block/1)}
-  def parse_block({:field, context, data}), do: {:command_field, context, data}
   def parse_block(block), do: block
 
   defmacro command(do: block) do
@@ -193,17 +192,27 @@ defmodule CommandEx.Command do
     end
   end
 
-  defmacro command_field(name, type \\ :string, opts \\ []) do
+  defmacro internal(name, type \\ :string, opts \\ []) do
+    quote do
+      opts = unquote(opts)
+
+      Module.put_attribute(__MODULE__, :internal_fields, unquote(name))
+
+      Ecto.Schema.__field__(
+        __MODULE__,
+        unquote(name),
+        unquote(type),
+        opts |> Keyword.drop(unquote(@command_options ++ @valid_validators))
+      )
+    end
+  end
+
+  defmacro param(name, type \\ :string, opts \\ []) do
     quote do
       opts = unquote(opts)
 
       Module.put_attribute(__MODULE__, :command_fields, {unquote(name), unquote(type), opts})
-
-      if opts[:internal] == true do
-        Module.put_attribute(__MODULE__, :internal_fields, unquote(name))
-      else
-        Module.put_attribute(__MODULE__, :cast_fields, unquote(name))
-      end
+      Module.put_attribute(__MODULE__, :cast_fields, unquote(name))
 
       if opts[:trim] == true do
         if unquote(type) == :string do

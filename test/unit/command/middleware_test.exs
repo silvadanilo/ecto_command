@@ -69,7 +69,7 @@ defmodule Unit.CommandEx.Command.MiddlewareTest do
     use SampleMiddleware, middleware_name: :second_middleware
 
     command do
-      field :name, :string, required: true
+      param :name, :string, required: true
     end
 
     def execute(%__MODULE__{} = command) do

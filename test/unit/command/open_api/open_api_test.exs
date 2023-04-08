@@ -11,27 +11,28 @@ defmodule Unit.CommandEx.OpenApi.OpenApiTest do
     use CommandEx.OpenApi, title: "Sample"
 
     command do
-      field :id, :string, doc: Type.uuid()
-      field :name, :string, required: true, length: [min: 2, max: 255], doc: [example: "Mario"]
-      field :email, :string, required: true, format: ~r/@/, length: [min: 6], doc: Type.email()
-      field :phone, :string, length: [min: 9], doc: Type.phone()
-      field :extension, :string, required: false, length: [is: 3], doc: [example: "png"]
+      param :id, :string, doc: Type.uuid()
+      param :name, :string, required: true, length: [min: 2, max: 255], doc: [example: "Mario"]
+      param :email, :string, required: true, format: ~r/@/, length: [min: 6], doc: Type.email()
+      param :phone, :string, length: [min: 9], doc: Type.phone()
+      param :extension, :string, required: false, length: [is: 3], doc: [example: "png"]
 
-      field :mime_type, :string,
+      param :mime_type, :string,
         required: true,
         inclusion: ["image/jpeg", "image/png"],
         doc: Type.enum(["image/jpeg", "image/png"])
 
-      field :count, :integer, required: true, number: [greater_than_or_equal_to: 18, less_than: 100]
-      field :an_integer_a, :integer, number: [equal_to: 20]
-      field :an_integer_b, :integer, number: [not_equal_to: 20]
-      field :an_integer_c, :integer, number: [greater_than: 18, less_than_or_equal_to: 100]
-      field :type_id, :string
-      field :accepts, :boolean, doc: Type.boolean()
-      field :folder_id, :string, change: &String.valid?/1
-      field :triggered_by, :map, internal: true
-      field :uploaded_by, :string, internal: true
-      field :uploaded_at, :utc_datetime, doc: Type.datetime()
+      param :count, :integer, required: true, number: [greater_than_or_equal_to: 18, less_than: 100]
+      param :an_integer_a, :integer, number: [equal_to: 20]
+      param :an_integer_b, :integer, number: [not_equal_to: 20]
+      param :an_integer_c, :integer, number: [greater_than: 18, less_than_or_equal_to: 100]
+      param :type_id, :string
+      param :accepts, :boolean, doc: Type.boolean()
+      param :folder_id, :string, change: &String.valid?/1
+      param :uploaded_at, :utc_datetime, doc: Type.datetime()
+
+      internal :triggered_by, :map
+      internal :uploaded_by, :string
     end
   end
 

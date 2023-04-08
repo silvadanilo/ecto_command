@@ -9,9 +9,9 @@ defmodule Unit.CommandEx.Command.ValidatorsTest do
       module_name = String.to_atom("Sample#{:rand.uniform(999_999)}")
 
       define_a_module_with_fields module_name do
-        field :name, :string, change: &unquote(__MODULE__).always_invalid/2
+        param :name, :string, change: &unquote(__MODULE__).always_invalid/2
 
-        field :surname, :string, change: {{:my_validator, [min: 2]}, &unquote(__MODULE__).always_valid/2}
+        param :surname, :string, change: {{:my_validator, [min: 2]}, &unquote(__MODULE__).always_valid/2}
       end
 
       assert [surname: {:my_validator, [min: 2]}] == defined_validators(module_name),
@@ -25,7 +25,7 @@ defmodule Unit.CommandEx.Command.ValidatorsTest do
       module_name = String.to_atom("Sample#{:rand.uniform(999_999)}")
 
       define_a_module_with_fields module_name do
-        field :terms_and_condition, :boolean, acceptance: true
+        param :terms_and_condition, :boolean, acceptance: true
       end
 
       assert [terms_and_condition: {:acceptance, []}] == defined_validators(module_name)
@@ -40,8 +40,8 @@ defmodule Unit.CommandEx.Command.ValidatorsTest do
       module_name = String.to_atom("Sample#{:rand.uniform(999_999)}")
 
       define_a_module_with_fields module_name do
-        field :email, :string, confirmation: true
-        field :email_confirmation, :string
+        param :email, :string, confirmation: true
+        param :email_confirmation, :string
       end
 
       assert [email: {:confirmation, []}] == defined_validators(module_name)
@@ -63,7 +63,7 @@ defmodule Unit.CommandEx.Command.ValidatorsTest do
       module_name = String.to_atom("Sample#{:rand.uniform(999_999)}")
 
       define_a_module_with_fields module_name do
-        field :role, :string, exclusion: ["admin"]
+        param :role, :string, exclusion: ["admin"]
       end
 
       assert [role: {:exclusion, ["admin"]}] == defined_validators(module_name)
@@ -75,7 +75,7 @@ defmodule Unit.CommandEx.Command.ValidatorsTest do
       module_name = String.to_atom("Sample#{:rand.uniform(999_999)}")
 
       define_a_module_with_fields module_name do
-        field :email, :string, format: ~r/@/
+        param :email, :string, format: ~r/@/
       end
 
       assert [email: {:format, ~r/@/}] == defined_validators(module_name)
@@ -87,7 +87,7 @@ defmodule Unit.CommandEx.Command.ValidatorsTest do
       module_name = String.to_atom("Sample#{:rand.uniform(999_999)}")
 
       define_a_module_with_fields module_name do
-        field :cardinal_direction, :string, inclusion: ["north", "east", "south", "west"]
+        param :cardinal_direction, :string, inclusion: ["north", "east", "south", "west"]
       end
 
       assert [cardinal_direction: {:inclusion, ["north", "east", "south", "west"]}] ==
@@ -103,7 +103,7 @@ defmodule Unit.CommandEx.Command.ValidatorsTest do
       module_name = String.to_atom("Sample#{:rand.uniform(999_999)}")
 
       define_a_module_with_fields module_name do
-        field :name, :string, length: [min: 3, max: 10]
+        param :name, :string, length: [min: 3, max: 10]
       end
 
       assert [name: {:length, [min: 3, max: 10]}] == defined_validators(module_name)
@@ -120,7 +120,7 @@ defmodule Unit.CommandEx.Command.ValidatorsTest do
       module_name = String.to_atom("Sample#{:rand.uniform(999_999)}")
 
       define_a_module_with_fields module_name do
-        field :age, :integer, number: [greater_than_or_equal_to: 18, less_than: 100]
+        param :age, :integer, number: [greater_than_or_equal_to: 18, less_than: 100]
       end
 
       assert [age: {:number, [greater_than_or_equal_to: 18, less_than: 100]}] ==
@@ -138,7 +138,7 @@ defmodule Unit.CommandEx.Command.ValidatorsTest do
       module_name = String.to_atom("Sample#{:rand.uniform(999_999)}")
 
       define_a_module_with_fields module_name do
-        field :name, :string, required: true
+        param :name, :string, required: true
       end
 
       assert [] == defined_validators(module_name)
@@ -152,7 +152,7 @@ defmodule Unit.CommandEx.Command.ValidatorsTest do
       module_name = String.to_atom("Sample#{:rand.uniform(999_999)}")
 
       define_a_module_with_fields module_name do
-        field :lottery_numbers, {:array, :integer}, subset: 0..99
+        param :lottery_numbers, {:array, :integer}, subset: 0..99
       end
 
       assert [{:lottery_numbers, {:subset, 0..99}}] == defined_validators(module_name)
