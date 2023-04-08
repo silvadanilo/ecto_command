@@ -75,15 +75,16 @@ defmodule CommandEx.Command do
         end
       end
 
-      def __set_internal_fields(%{valid?: false} = changeset), do: changeset
+      def __set_internal_fields(changeset), do: __set_internal_fields(changeset, Enum.reverse(@internal_fields))
+      def __set_internal_fields(%{valid?: false} = changeset, _internal_fields), do: changeset
+      def __set_internal_fields(changeset, []), do: changeset
+      def __set_internal_fields(changeset, [field | internal_fields]) do
+        changeset = case apply(__MODULE__, :set, [field, changeset, changeset.params]) do
+          %Ecto.Changeset{} = changeset -> changeset
+          value -> put_change(changeset, field, value)
+        end
 
-      def __set_internal_fields(changeset) do
-        Enum.reduce(Enum.reverse(@internal_fields), changeset, fn field, changeset ->
-          case apply(__MODULE__, :set, [field, changeset, changeset.params]) do
-            %Ecto.Changeset{} = changeset -> changeset
-            value -> put_change(changeset, field, value)
-          end
-        end)
+        __set_internal_fields(changeset, internal_fields)
       end
 
       defp before_execution(command, attributes) do
