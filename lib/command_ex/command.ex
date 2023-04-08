@@ -49,12 +49,13 @@ defmodule CommandEx.Command do
       end
 
       def changeset(%{} = params) do
+        params = CommandEx.Command.trim_fields(params, @trim_fields)
+
         __MODULE__
         |> struct!(%{})
         |> cast(params, @cast_fields)
-        |> __set_internal_fields()
-        |> __trim_fields()
         |> __validate()
+        |> __set_internal_fields()
       end
 
       def execute(%{} = attributes) when is_map(attributes) do
@@ -73,6 +74,8 @@ defmodule CommandEx.Command do
           {:error, error} -> invalid({:error, error}, attributes, __MODULE__)
         end
       end
+
+      def __set_internal_fields(%{valid?: false} = changeset), do: changeset
 
       def __set_internal_fields(changeset) do
         Enum.reduce(Enum.reverse(@internal_fields), changeset, fn field, changeset ->
@@ -169,15 +172,6 @@ defmodule CommandEx.Command do
         def __validate(changeset) do
           unquote(validator_ast)
         end
-
-        trim_fields_ast =
-          Enum.reduce(@trim_fields, quote(do: changeset), fn
-            field, acc -> quote do: update_change(unquote(acc), unquote(field), &CommandEx.Command.trim/1)
-          end)
-
-        def __trim_fields(changeset) do
-          unquote(trim_fields_ast)
-        end
       end
 
     quote do
@@ -244,5 +238,9 @@ defmodule CommandEx.Command do
     end
   end
 
-  def trim(string) when is_binary(string), do: String.trim(string)
+  def trim_fields(params, trim_fields) do
+    Enum.reduce(trim_fields, params, fn field, params ->
+      Map.update(params, field, nil, &String.trim/1)
+    end)
+  end
 end
