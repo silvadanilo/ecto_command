@@ -4,14 +4,14 @@ defmodule CommandEx.Middleware do
   called for every command execution
 
   Implement the `Commanded.Middleware` behaviour in your module and define the
-  `c:before_execution/2`, `c:after_execution/3`, and `c:after_failure/4` callback functions.
+  `c:before_execution/3`, `c:after_execution/4`, `c:after_failure/4` and `c:invalid/3` callback functions.
 
   ## Example middleware
 
-      defmodule NoOpMiddleware do
+      defmodule SampleMiddleware do
         @behaviour CommandEx.Middleware
 
-        def before_execution(command, opts) do
+        def before_execution(command, _attributes, _opts) do
           {:ok, command}
 
           # or
@@ -22,20 +22,28 @@ defmodule CommandEx.Middleware do
           {:error, :some_error}
         end
 
-        def after_execution(result, _command, _opts) do
+        def after_execution(result, _command, _attributes, _opts) do
           result
         end
 
-        def after_failure(_kind, result, _command, _opts) do
-          result
+        def after_failure(error, _command, _attributes, _opts) do
+          error
+        end
+
+        def invalid(error, _attributes, _module, _opts) do
+          error
         end
       end
   """
 
-  @callback before_execution(command :: struct(), opts :: Keyword.t()) ::
+  @callback before_execution(command :: struct(), attributes :: map(), opts :: Keyword.t()) ::
               {:ok, struct()} | {:error, any()} | {:halt, any()}
-  @callback after_execution(result :: any(), command :: struct(), opts :: Keyword.t()) ::
+
+  @callback after_execution(command :: struct(), result :: any(), attributes :: map(), opts :: Keyword.t()) ::
               {:ok, any()} | {:error, any()} | {:halt, any()}
-  @callback after_failure(kind :: atom(), result :: any(), command :: struct() | map(), opts :: Keyword.t()) ::
-              {:error, any()}
+
+  @callback after_failure(command :: struct(), result :: any(), attributes :: map(), opts :: Keyword.t()) ::
+              {:ok, any()} | {:error, any()}
+
+  @callback invalid(error :: any(), attributes :: map(), module :: atom(), opts :: Keyword.t()) :: any()
 end

@@ -59,18 +59,18 @@ defmodule CommandEx.Command do
 
       def execute(%{} = attributes) when is_map(attributes) do
         with {:ok, command} <- new(attributes),
-             {:ok, command} <- before_execution(command) do
+             {:ok, command} <- before_execution(command, attributes) do
           command
           |> execute()
           |> case do
             {:error, error} ->
-              after_failure(:error, {:error, error}, command)
+              after_failure({:error, error}, command, attributes)
 
             result ->
-              after_execution(result, command)
+              after_execution(result, command, attributes)
           end
         else
-          {:error, error} -> after_failure(:invalid, {:error, error}, attributes)
+          {:error, error} -> invalid({:error, error}, attributes, __MODULE__)
         end
       end
 
@@ -83,27 +83,42 @@ defmodule CommandEx.Command do
         end)
       end
 
-      defp before_execution(command) do
+      defp before_execution(command, attributes) do
         Enum.reduce_while(Enum.reverse(@middlewares), {:ok, command}, fn {middleware, opts}, {:ok, command} ->
-          case apply(middleware, :before_execution, [command, opts]) do
-            {:ok, command} -> {:cont, {:ok, command}}
-            {:error, error} -> {:halt, {:error, error}}
+          case apply(middleware, :before_execution, [command, attributes, opts]) do
+            {:ok, command} ->
+              {:cont, {:ok, command}}
+
+            {:error, error} ->
+              {:halt, {:error, error}}
+
+            _ ->
+              raise "Invalid return type, middleware before_execution method should returns {:ok, command} or {:error, error}"
           end
         end)
       end
 
-      defp after_execution(result, command) do
+      defp after_execution(result, command, attributes) do
         Enum.reduce_while(@middlewares, result, fn {middleware, opts}, result ->
-          case apply(middleware, :after_execution, [result, command, opts]) do
+          case apply(middleware, :after_execution, [command, result, attributes, opts]) do
             {:halt, result} -> {:halt, result}
             result -> {:cont, result}
           end
         end)
       end
 
-      defp after_failure(kind, result, attributes) do
-        Enum.reduce_while(@middlewares, result, fn {middleware, opts}, result ->
-          case apply(middleware, :after_failure, [kind, result, attributes, opts]) do
+      defp after_failure(error, command, attributes) do
+        Enum.reduce_while(@middlewares, error, fn {middleware, opts}, result ->
+          case apply(middleware, :after_failure, [result, command, attributes, opts]) do
+            {:halt, result} -> {:halt, result}
+            result -> {:cont, result}
+          end
+        end)
+      end
+
+      defp invalid(error, attributes, module) do
+        Enum.reduce_while(Enum.reverse(@middlewares), error, fn {middleware, opts}, result ->
+          case apply(middleware, :invalid, [result, attributes, module, opts]) do
             {:halt, result} -> {:halt, result}
             result -> {:cont, result}
           end

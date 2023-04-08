@@ -25,7 +25,7 @@ defmodule Unit.CommandEx.Command.MiddlewareTest do
     end
 
     @impl true
-    def before_execution(command, opts) do
+    def before_execution(command, _attributes, opts) do
       middleware_name = opts[:middleware_name]
       store_call(:before_execution, middleware_name)
 
@@ -33,7 +33,7 @@ defmodule Unit.CommandEx.Command.MiddlewareTest do
     end
 
     @impl true
-    def after_execution(result, command, opts) do
+    def after_execution(command, result, _attributes, opts) do
       middleware_name = opts[:middleware_name]
       store_call(:after_execution, middleware_name)
 
@@ -41,11 +41,19 @@ defmodule Unit.CommandEx.Command.MiddlewareTest do
     end
 
     @impl true
-    def after_failure(_kind, result, command, opts) do
+    def after_failure(result, command, _attributes, opts) do
       middleware_name = opts[:middleware_name]
       store_call(:after_failure, middleware_name)
 
       get_callback(:after_failure, middleware_name, fn r, _c, _o -> r end).(result, command, opts)
+    end
+
+    @impl true
+    def invalid(error, attributes, _module, opts) do
+      middleware_name = opts[:middleware_name]
+      store_call(:invalid, middleware_name)
+
+      get_callback(:invalid, middleware_name, fn r, _c, _o -> r end).(error, attributes, opts)
     end
 
     defp store_call(kind, middleware_name) do
@@ -122,12 +130,14 @@ defmodule Unit.CommandEx.Command.MiddlewareTest do
     end
   end
 
-  describe "a middleware after_failure function" do
-    test "is called (in reverse order) for every registered middleware when the command is invalid" do
+  describe "a middleware invalid function" do
+    test "is called for every registered middleware when the command is invalid" do
       assert {:error, _changeset} = SampleCommand.execute(%{})
-      assert [:second_middleware, :first_middleware] = Process.get(:after_failure, [])
+      assert [:first_middleware, :second_middleware] = Process.get(:invalid, [])
     end
+  end
 
+  describe "a middleware after_failure function" do
     test "is called (in reverse order) for every registered middleware when the execution fails" do
       Process.put(:command_execution_should_fails, true)
 
