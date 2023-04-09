@@ -19,7 +19,7 @@ defmodule CommandEx.Command do
   defmacro __using__(_) do
     quote do
       import CommandEx.Command,
-        only: [command: 1, param: 1, param: 2, param: 3, extra_validator: 1, extra_validator: 2, internal: 2, internal: 3]
+        only: [command: 1, param: 2, param: 3, extra_validator: 1, extra_validator: 2, internal: 2, internal: 3]
 
       import Ecto.Changeset
 
@@ -58,6 +58,8 @@ defmodule CommandEx.Command do
         |> __set_internal_fields()
       end
 
+      def execute({:ok, data}), do: execute(data)
+
       def execute(%{} = attributes) when is_map(attributes) do
         with {:ok, command} <- new(attributes),
              {:ok, command} <- before_execution(command, attributes) do
@@ -78,11 +80,13 @@ defmodule CommandEx.Command do
       def __set_internal_fields(changeset), do: __set_internal_fields(changeset, Enum.reverse(@internal_fields))
       def __set_internal_fields(%{valid?: false} = changeset, _internal_fields), do: changeset
       def __set_internal_fields(changeset, []), do: changeset
+
       def __set_internal_fields(changeset, [field | internal_fields]) do
-        changeset = case apply(__MODULE__, :set, [field, changeset, changeset.params]) do
-          %Ecto.Changeset{} = changeset -> changeset
-          value -> put_change(changeset, field, value)
-        end
+        changeset =
+          case apply(__MODULE__, :set, [field, changeset, changeset.params]) do
+            %Ecto.Changeset{} = changeset -> changeset
+            value -> put_change(changeset, field, value)
+          end
 
         __set_internal_fields(changeset, internal_fields)
       end
@@ -202,7 +206,7 @@ defmodule CommandEx.Command do
     end
   end
 
-  defmacro param(name, type \\ :string, opts \\ []) do
+  defmacro param(name, type, opts \\ []) do
     quote do
       opts = unquote(opts)
 
