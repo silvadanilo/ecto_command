@@ -4,8 +4,12 @@ defmodule Unit.CommandEx.Command.MiddlewareTest do
   use ExUnit.Case, async: true
   use CommandEx.Test.CommandCase
 
+  alias CommandEx.Middleware.Pipeline
+
   defmodule SampleMiddleware do
     @moduledoc false
+
+    alias CommandEx.Middleware.Pipeline
 
     @behaviour CommandEx.Middleware
 
@@ -32,12 +36,26 @@ defmodule Unit.CommandEx.Command.MiddlewareTest do
       get_callback(:before_execution, middleware_name, fn c -> {:ok, c} end).(command)
     end
 
+    def before_execution(pipeline, opts) do
+      middleware_name = opts[:middleware_name]
+      store_call(:before_execution, middleware_name)
+
+      get_callback(:before_execution, middleware_name, fn pipeline -> pipeline end).(pipeline)
+    end
+
     @impl true
     def after_execution(command, result, _attributes, opts) do
       middleware_name = opts[:middleware_name]
       store_call(:after_execution, middleware_name)
 
       get_callback(:after_execution, middleware_name, fn r, _c, _o -> r end).(result, command, opts)
+    end
+
+    def after_execution(pipeline, opts) do
+      middleware_name = opts[:middleware_name]
+      store_call(:after_execution, middleware_name)
+
+      get_callback(:after_execution, middleware_name, fn pipeline, _opts -> pipeline end).(pipeline, opts)
     end
 
     @impl true
@@ -48,12 +66,26 @@ defmodule Unit.CommandEx.Command.MiddlewareTest do
       get_callback(:after_failure, middleware_name, fn r, _c, _o -> r end).(result, command, opts)
     end
 
+    def after_failure(pipeline, opts) do
+      middleware_name = opts[:middleware_name]
+      store_call(:after_failure, middleware_name)
+
+      get_callback(:after_failure, middleware_name, fn pipeline, _opts -> pipeline end).(pipeline, opts)
+    end
+
     @impl true
     def invalid(error, attributes, _module, opts) do
       middleware_name = opts[:middleware_name]
       store_call(:invalid, middleware_name)
 
       get_callback(:invalid, middleware_name, fn r, _c, _o -> r end).(error, attributes, opts)
+    end
+
+    def invalid(pipeline, opts) do
+      middleware_name = opts[:middleware_name]
+      store_call(:invalid, middleware_name)
+
+      get_callback(:invalid, middleware_name, fn pipeline, _opts -> pipeline end).(pipeline, opts)
     end
 
     defp store_call(kind, middleware_name) do
@@ -96,8 +128,8 @@ defmodule Unit.CommandEx.Command.MiddlewareTest do
     end
 
     test "is not called when a previous middleware returns an error" do
-      SampleMiddleware.register_callback(:before_execution, :first_middleware, fn _command ->
-        {:error, :an_error}
+      SampleMiddleware.register_callback(:before_execution, :first_middleware, fn pipeline ->
+        Pipeline.halt(pipeline, {:error, :an_error})
       end)
 
       assert {:error, :an_error} = SampleCommand.execute(%{name: "foo"})
@@ -105,8 +137,8 @@ defmodule Unit.CommandEx.Command.MiddlewareTest do
     end
 
     test "a middleware could update the command" do
-      SampleMiddleware.register_callback(:before_execution, :first_middleware, fn command ->
-        {:ok, %{command | name: "updated"}}
+      SampleMiddleware.register_callback(:before_execution, :first_middleware, fn pipeline ->
+        Pipeline.update!(pipeline, :command, fn command -> %{command | name: "updated"} end)
       end)
 
       assert {:executed, %SampleCommand{name: "updated"}} == SampleCommand.execute(%{name: "foo"})
@@ -120,9 +152,9 @@ defmodule Unit.CommandEx.Command.MiddlewareTest do
     end
 
     test "a middleware could change the result" do
-      SampleMiddleware.register_callback(:after_execution, :first_middleware, fn result, _command, _opts ->
-        assert {:executed, _} = result
-        {:error, :an_error}
+      SampleMiddleware.register_callback(:after_execution, :first_middleware, fn pipeline, _opts ->
+        assert {:executed, _} = Pipeline.response(pipeline)
+        Pipeline.respond(pipeline, {:error, :an_error})
       end)
 
       assert {:error, :an_error} = SampleCommand.execute(%{name: "foo"})
@@ -141,14 +173,14 @@ defmodule Unit.CommandEx.Command.MiddlewareTest do
     test "is called (in reverse order) for every registered middleware when the execution fails" do
       Process.put(:command_execution_should_fails, true)
 
-      assert {:error, _changeset} = SampleCommand.execute(%{name: "foo"})
+      assert {:error, :an_error} = SampleCommand.execute(%{name: "foo"})
       assert [:second_middleware, :first_middleware] = Process.get(:after_failure, [])
     end
 
     test "a middleware could change the failed result" do
-      SampleMiddleware.register_callback(:after_failure, :first_middleware, fn result, _command, _opts ->
-        assert {:error, :an_error} = result
-        {:ok, :updated_result}
+      SampleMiddleware.register_callback(:after_failure, :first_middleware, fn pipeline, _opts ->
+        assert {:error, :an_error} = Pipeline.response(pipeline)
+        Pipeline.respond(pipeline, {:ok, :updated_result})
       end)
 
       Process.put(:command_execution_should_fails, true)
