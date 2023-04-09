@@ -33,9 +33,9 @@ defmodule CommandEx.Command do
       Module.register_attribute(__MODULE__, :middlewares, accumulate: true)
 
       @doc false
-      def set(_, changeset, _params), do: changeset
+      def fill(_, changeset, _params), do: changeset
 
-      defoverridable set: 3
+      defoverridable fill: 3
     end
   end
 
@@ -55,7 +55,7 @@ defmodule CommandEx.Command do
         |> struct!(%{})
         |> cast(params, @cast_fields)
         |> __validate()
-        |> __set_internal_fields()
+        |> __fill_internal_fields()
       end
 
       def execute({:ok, data}), do: execute(data)
@@ -77,18 +77,18 @@ defmodule CommandEx.Command do
         end
       end
 
-      def __set_internal_fields(changeset), do: __set_internal_fields(changeset, Enum.reverse(@internal_fields))
-      def __set_internal_fields(%{valid?: false} = changeset, _internal_fields), do: changeset
-      def __set_internal_fields(changeset, []), do: changeset
+      def __fill_internal_fields(changeset), do: __fill_internal_fields(changeset, Enum.reverse(@internal_fields))
+      def __fill_internal_fields(%{valid?: false} = changeset, _internal_fields), do: changeset
+      def __fill_internal_fields(changeset, []), do: changeset
 
-      def __set_internal_fields(changeset, [field | internal_fields]) do
+      def __fill_internal_fields(changeset, [field | internal_fields]) do
         changeset =
-          case apply(__MODULE__, :set, [field, changeset, changeset.params]) do
+          case apply(__MODULE__, :fill, [field, changeset, changeset.params]) do
             %Ecto.Changeset{} = changeset -> changeset
             value -> put_change(changeset, field, value)
           end
 
-        __set_internal_fields(changeset, internal_fields)
+        __fill_internal_fields(changeset, internal_fields)
       end
 
       defp before_execution(command, attributes) do

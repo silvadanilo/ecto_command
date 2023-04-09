@@ -18,7 +18,7 @@ defmodule Unit.CommandEx.Command.OptionsTest do
       assert false == Map.has_key?(changeset.changes, :surname)
     end
 
-    test "an internal field could be set by the set function" do
+    test "an internal field could be set by the 'fill/3' function" do
       module_name = String.to_atom("Sample#{:rand.uniform(999_999)}")
 
       defmodule module_name do
@@ -29,7 +29,7 @@ defmodule Unit.CommandEx.Command.OptionsTest do
           internal :surname, :string
         end
 
-        def set(:surname, changeset, params) do
+        def fill(:surname, changeset, params) do
           "my custom set: #{changeset.changes.name} #{params["surname"]}"
         end
       end
