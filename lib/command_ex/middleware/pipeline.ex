@@ -8,42 +8,32 @@ defmodule CommandEx.Middleware.Pipeline do
 
   ## Pipeline fields
 
-    - `application` - the CommandEx application.
-
     - `assigns` - shared user data as a map.
 
-    - `causation_id` - an optional UUID used to identify the cause of the
-       command being dispatched.
+    - `command_uuid` - UUID assigned to the command being executed.
 
-    - `correlation_id` - an optional UUID used to correlate related
-       commands/events together.
+    - `command` - command struct being executed.
 
-    - `command` - command struct being dispatched.
+    - `params` - raw params received to instantiate the command
 
-    - `command_uuid` - UUID assigned to the command being dispatched.
-
-    - `consistency` - requested dispatch consistency, either: `:eventual`
-       (default) or `:strong`.
+    - `metadata` - additional metadata, they could be used to fill internal command fields
 
     - `halted` - flag indicating whether the pipeline was halted.
 
-    - `identity` - an atom specifying a field in the command containing the
-       aggregate's identity or a one-arity function that returns an identity
-       from the command being dispatched.
+    - `handler` - handler module where the "execute/1" function resides
 
-    - `identity_prefix` - an optional prefix to the aggregate's identity. It may
-       be a string (e.g. "prefix-") or a zero arity function
-       (e.g. `&MyRouter.identity_prefix/0`).
-
-    - `metadata` - the metadata map to be persisted along with the events.
+    - `middlewares` - the list of middlewares to be executed
 
     - `response` - sets the response to send back to the caller.
+
+    - `error` - sets the error to send back to the caller.
 
   """
   defstruct [
     :handler,
     :command,
     :params,
+    :metadata,
     :middlewares,
     :response,
     :error,
@@ -57,8 +47,7 @@ defmodule CommandEx.Middleware.Pipeline do
   Set the `key` with value
 
   ## Examples
-      iex> pipeline = %Pipeline{}
-      iex> pipeline = set(pipeline, :command, :my_command)
+      iex> pipeline = set(%Pipeline{}, :command, :my_command)
       iex> pipeline.command
       :my_command
   """
@@ -70,8 +59,7 @@ defmodule CommandEx.Middleware.Pipeline do
   Puts the `key` with value equal to `value` into `assigns` map.
 
   ## Examples
-      iex> pipeline = %Pipeline{}
-      iex> pipeline = assign(pipeline, :foo, :bar)
+      iex> pipeline = assign(%Pipeline{}, :foo, :bar)
       iex> pipeline.assigns
       %{foo: :bar}
   """
@@ -96,6 +84,9 @@ defmodule CommandEx.Middleware.Pipeline do
 
   @doc """
   Has the pipeline been halted?
+  ## Examples
+      iex> true = halted?(%Pipeline{halted: true})
+      iex> false = halted?(%Pipeline{halted: false})
   """
   def halted?(%Pipeline{halted: halted}), do: halted
 

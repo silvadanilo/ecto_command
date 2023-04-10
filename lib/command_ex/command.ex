@@ -36,47 +36,47 @@ defmodule CommandEx.Command do
       Module.register_attribute(__MODULE__, :middlewares, accumulate: true)
 
       @doc false
-      def fill(_, changeset, _params), do: changeset
+      def fill(_, changeset, _params, _metadata), do: changeset
 
-      defoverridable fill: 3
+      defoverridable fill: 4
     end
   end
 
   @doc false
   defmacro __before_compile__(_env) do
     quote unquote: false do
-      def new(attributes) do
+      def new(attributes, metadata \\ %{}) do
         attributes
-        |> changeset()
+        |> changeset(metadata)
         |> apply_action(:insert)
       end
 
-      def changeset(%{} = params) do
+      def changeset(%{} = params, metadata \\ %{}) do
         params = Command.trim_fields(params, @trim_fields)
 
         __MODULE__
         |> struct!(%{})
         |> cast(params, @cast_fields)
         |> __validate()
-        |> __fill_internal_fields()
+        |> __fill_internal_fields(metadata)
       end
 
-      def execute(%{} = params) when is_map(params) do
-        Command.execute(%Pipeline{params: params, handler: __MODULE__, middlewares: @middlewares})
+      def execute(%{} = params, metadata \\ %{}) when is_map(params) do
+        Command.execute(%Pipeline{params: params, metadata: metadata, handler: __MODULE__, middlewares: @middlewares})
       end
 
-      def __fill_internal_fields(changeset), do: __fill_internal_fields(changeset, Enum.reverse(@internal_fields))
-      def __fill_internal_fields(%{valid?: false} = changeset, _internal_fields), do: changeset
-      def __fill_internal_fields(changeset, []), do: changeset
+      def __fill_internal_fields(changeset, metadata), do: __fill_internal_fields(changeset, metadata, Enum.reverse(@internal_fields))
+      def __fill_internal_fields(%{valid?: false} = changeset, _metadata, _internal_fields), do: changeset
+      def __fill_internal_fields(changeset, _metadata, []), do: changeset
 
-      def __fill_internal_fields(changeset, [field | internal_fields]) do
+      def __fill_internal_fields(changeset, metadata, [field | internal_fields]) do
         changeset =
-          case apply(__MODULE__, :fill, [field, changeset, changeset.params]) do
+          case apply(__MODULE__, :fill, [field, changeset, changeset.params, metadata]) do
             %Ecto.Changeset{} = changeset -> changeset
             value -> put_change(changeset, field, value)
           end
 
-        __fill_internal_fields(changeset, internal_fields)
+        __fill_internal_fields(changeset, metadata, internal_fields)
       end
     end
   end
@@ -205,8 +205,8 @@ defmodule CommandEx.Command do
     |> Pipeline.response()
   end
 
-  defp instantiate_command(%Pipeline{handler: handler, params: params} = pipeline) do
-    case handler.new(params) do
+  defp instantiate_command(%Pipeline{handler: handler, params: params, metadata: metadata} = pipeline) do
+    case handler.new(params, metadata) do
       {:ok, command} ->
         Pipeline.set(pipeline, :command, command)
       {:error, error} ->
