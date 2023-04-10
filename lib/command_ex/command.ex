@@ -1,6 +1,9 @@
 defmodule CommandEx.Command do
   @moduledoc false
 
+  alias CommandEx.Command
+  alias CommandEx.Middleware.Pipeline
+
   @command_options [:internal, :trim, :doc]
   @valid_validators [
     :acceptance,
@@ -19,7 +22,7 @@ defmodule CommandEx.Command do
   defmacro __using__(_) do
     quote do
       import CommandEx.Command,
-        only: [command: 1, param: 1, param: 2, param: 3, extra_validator: 1, extra_validator: 2, internal: 2, internal: 3]
+        only: [command: 1, param: 2, param: 3, extra_validator: 1, extra_validator: 2, internal: 2, internal: 3]
 
       import Ecto.Changeset
 
@@ -33,9 +36,9 @@ defmodule CommandEx.Command do
       Module.register_attribute(__MODULE__, :middlewares, accumulate: true)
 
       @doc false
-      def set(_, changeset, _params), do: changeset
+      def fill(_, changeset, _params), do: changeset
 
-      defoverridable set: 3
+      defoverridable fill: 3
     end
   end
 
@@ -49,83 +52,31 @@ defmodule CommandEx.Command do
       end
 
       def changeset(%{} = params) do
-        params = CommandEx.Command.trim_fields(params, @trim_fields)
+        params = Command.trim_fields(params, @trim_fields)
 
         __MODULE__
         |> struct!(%{})
         |> cast(params, @cast_fields)
         |> __validate()
-        |> __set_internal_fields()
+        |> __fill_internal_fields()
       end
 
-      def execute(%{} = attributes) when is_map(attributes) do
-        with {:ok, command} <- new(attributes),
-             {:ok, command} <- before_execution(command, attributes) do
-          command
-          |> execute()
-          |> case do
-            {:error, error} ->
-              after_failure({:error, error}, command, attributes)
-
-            result ->
-              after_execution(result, command, attributes)
-          end
-        else
-          {:error, error} -> invalid({:error, error}, attributes, __MODULE__)
-        end
+      def execute(%{} = params) when is_map(params) do
+        Command.execute(%Pipeline{params: params, handler: __MODULE__, middlewares: @middlewares})
       end
 
-      def __set_internal_fields(%{valid?: false} = changeset), do: changeset
+      def __fill_internal_fields(changeset), do: __fill_internal_fields(changeset, Enum.reverse(@internal_fields))
+      def __fill_internal_fields(%{valid?: false} = changeset, _internal_fields), do: changeset
+      def __fill_internal_fields(changeset, []), do: changeset
 
-      def __set_internal_fields(changeset) do
-        Enum.reduce(Enum.reverse(@internal_fields), changeset, fn field, changeset ->
-          case apply(__MODULE__, :set, [field, changeset, changeset.params]) do
+      def __fill_internal_fields(changeset, [field | internal_fields]) do
+        changeset =
+          case apply(__MODULE__, :fill, [field, changeset, changeset.params]) do
             %Ecto.Changeset{} = changeset -> changeset
             value -> put_change(changeset, field, value)
           end
-        end)
-      end
 
-      defp before_execution(command, attributes) do
-        Enum.reduce_while(Enum.reverse(@middlewares), {:ok, command}, fn {middleware, opts}, {:ok, command} ->
-          case apply(middleware, :before_execution, [command, attributes, opts]) do
-            {:ok, command} ->
-              {:cont, {:ok, command}}
-
-            {:error, error} ->
-              {:halt, {:error, error}}
-
-            _ ->
-              raise "Invalid return type, middleware before_execution method should returns {:ok, command} or {:error, error}"
-          end
-        end)
-      end
-
-      defp after_execution(result, command, attributes) do
-        Enum.reduce_while(@middlewares, result, fn {middleware, opts}, result ->
-          case apply(middleware, :after_execution, [command, result, attributes, opts]) do
-            {:halt, result} -> {:halt, result}
-            result -> {:cont, result}
-          end
-        end)
-      end
-
-      defp after_failure(error, command, attributes) do
-        Enum.reduce_while(@middlewares, error, fn {middleware, opts}, result ->
-          case apply(middleware, :after_failure, [result, command, attributes, opts]) do
-            {:halt, result} -> {:halt, result}
-            result -> {:cont, result}
-          end
-        end)
-      end
-
-      defp invalid(error, attributes, module) do
-        Enum.reduce_while(Enum.reverse(@middlewares), error, fn {middleware, opts}, result ->
-          case apply(middleware, :invalid, [result, attributes, module, opts]) do
-            {:halt, result} -> {:halt, result}
-            result -> {:cont, result}
-          end
-        end)
+        __fill_internal_fields(changeset, internal_fields)
       end
     end
   end
@@ -201,7 +152,7 @@ defmodule CommandEx.Command do
     end
   end
 
-  defmacro param(name, type \\ :string, opts \\ []) do
+  defmacro param(name, type, opts \\ []) do
     quote do
       opts = unquote(opts)
 
@@ -242,5 +193,27 @@ defmodule CommandEx.Command do
     Enum.reduce(trim_fields, params, fn field, params ->
       Map.update(params, field, nil, &String.trim/1)
     end)
+  end
+
+  def execute(%Pipeline{} = pipeline) do
+    pipeline
+    |> instantiate_command()
+    |> Pipeline.chain(:before_execution, Enum.reverse(pipeline.middlewares))
+    |> Pipeline.execute()
+    |> Pipeline.chain(:after_execution, pipeline.middlewares)
+    |> Pipeline.chain(:after_failure, pipeline.middlewares)
+    |> Pipeline.response()
+  end
+
+  defp instantiate_command(%Pipeline{handler: handler, params: params} = pipeline) do
+    case handler.new(params) do
+      {:ok, command} ->
+        Pipeline.set(pipeline, :command, command)
+      {:error, error} ->
+        pipeline
+        |> Pipeline.respond({:error, error})
+        |> Pipeline.chain(:invalid, Enum.reverse(pipeline.middlewares))
+        |> Pipeline.halt()
+    end
   end
 end

@@ -3,47 +3,50 @@ defmodule CommandEx.Middleware do
   Middleware provides an extension point to add functions that you want to be
   called for every command execution
 
-  Implement the `Commanded.Middleware` behaviour in your module and define the
-  `c:before_execution/3`, `c:after_execution/4`, `c:after_failure/4` and `c:invalid/3` callback functions.
+  Implement the `CommandEx.Middleware` behaviour in your module and define the
+  `c:before_execution/2`, `c:after_execution/2`, `c:after_failure/2` and `c:invalid/2` callback functions.
 
   ## Example middleware
 
       defmodule SampleMiddleware do
         @behaviour CommandEx.Middleware
 
-        def before_execution(command, _attributes, _opts) do
-          {:ok, command}
-
-          # or
-
-          # this way the subsequent middlewares will not be executed,
-          # the command will not be executed,
-          # and the return value will be: {:error, :some_error}
-          {:error, :some_error}
+        @impl true
+        def before_execution(pipeline, _opts) do
+          pipeline
+          |> Pipeline.assign(:some_data, :some_value)
+          |> Pipeline.update!(:command, fn command -> %{command | name: "updated-name"} end)
         end
 
-        def after_execution(result, _command, _attributes, _opts) do
-          result
+        def after_execution(pipeline, _opts) do
+          Logger.debug("Command executed successfully", command: pipeline.command, result: Pipeline.response(pipeline))
+
+          pipeline
         end
 
-        def after_failure(error, _command, _attributes, _opts) do
-          error
+        def after_failure(pipeline, _opts) do
+          Logger.error("Command execution fails", command: pipeline.command, error: Pipeline.response(pipeline))
+
+          pipeline
         end
 
-        def invalid(error, _attributes, _module, _opts) do
-          error
+        def invalid(pipeline, _opts) do
+          Logger.error("invalid params received", params: pipeline.params, error: Pipeline.response(pipeline))
+
+          pipeline
         end
       end
   """
 
-  @callback before_execution(command :: struct(), attributes :: map(), opts :: Keyword.t()) ::
-              {:ok, struct()} | {:error, any()} | {:halt, any()}
+  alias CommandEx.Middleware.Pipeline
 
-  @callback after_execution(command :: struct(), result :: any(), attributes :: map(), opts :: Keyword.t()) ::
-              {:ok, any()} | {:error, any()} | {:halt, any()}
+  @type pipeline :: %Pipeline{}
 
-  @callback after_failure(command :: struct(), result :: any(), attributes :: map(), opts :: Keyword.t()) ::
-              {:ok, any()} | {:error, any()}
+  @callback before_execution(pipeline :: pipeline(), opts :: Keyword.t()) :: pipeline()
 
-  @callback invalid(error :: any(), attributes :: map(), module :: atom(), opts :: Keyword.t()) :: any()
+  @callback after_execution(pipeline :: pipeline(), opts :: Keyword.t()) :: pipeline()
+
+  @callback after_failure(pipeline :: pipeline(), opts :: Keyword.t()) :: pipeline()
+
+  @callback invalid(pipeline :: pipeline(), opts :: Keyword.t()) :: pipeline()
 end
