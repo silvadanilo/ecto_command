@@ -1,14 +1,14 @@
-defmodule Unit.CommandEx.OpenApi.OpenApiTest do
+defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
   @moduledoc false
 
   use ExUnit.Case, async: true
-  use CommandEx.Test.CommandCase
+  use EctoCommand.Test.CommandCase
 
   defmodule Sample do
     @moduledoc false
 
-    use CommandEx.Command
-    use CommandEx.OpenApi, title: "Sample"
+    use EctoCommand.Command
+    use EctoCommand.OpenApi, title: "Sample"
 
     command do
       param :id, :string, doc: Type.uuid()

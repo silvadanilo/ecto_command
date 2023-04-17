@@ -1,7 +1,7 @@
-defmodule CommandEx.Middleware.Pipeline do
+defmodule EctoCommand.Middleware.Pipeline do
   @moduledoc """
   Pipeline is a struct used as an argument in the callback functions of modules
-  implementing the `CommandEx.Middleware` behaviour.
+  implementing the `EctoCommand.Middleware` behaviour.
 
   This struct must be returned by each function to be used in the next
   middleware based on the configured middleware chain.
@@ -41,7 +41,7 @@ defmodule CommandEx.Middleware.Pipeline do
     halted: false
   ]
 
-  alias CommandEx.Middleware.Pipeline
+  alias EctoCommand.Middleware.Pipeline
 
   @doc """
   Set the `key` with value

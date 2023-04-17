@@ -1,15 +1,15 @@
-defmodule Unit.CommandEx.Command.ExecutionTest do
+defmodule Unit.EctoCommand.Command.ExecutionTest do
   @moduledoc false
 
   use ExUnit.Case, async: true
-  use CommandEx.Test.CommandCase
+  use EctoCommand.Test.CommandCase
 
   describe "execute/1 function" do
     test "execute is called only when the command is valid" do
       module_name = String.to_atom("Sample#{:rand.uniform(999_999)}")
 
       defmodule module_name do
-        use CommandEx.Command
+        use EctoCommand.Command
 
         command do
           param :name, :string, required: true

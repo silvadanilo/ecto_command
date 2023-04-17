@@ -1,4 +1,4 @@
-defmodule CommandEx.OpenApi.Type do
+defmodule EctoCommand.OpenApi.Type do
   @moduledoc false
 
   def uuid(options \\ []) do

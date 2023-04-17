@@ -1,8 +1,8 @@
-defmodule Unit.CommandEx.Command.OptionsTest do
+defmodule Unit.EctoCommand.Command.OptionsTest do
   @moduledoc false
 
   use ExUnit.Case, async: true
-  use CommandEx.Test.CommandCase
+  use EctoCommand.Test.CommandCase
 
   describe ":internal option" do
     test "an internal field is not casted" do
@@ -22,7 +22,7 @@ defmodule Unit.CommandEx.Command.OptionsTest do
       module_name = String.to_atom("Sample#{:rand.uniform(999_999)}")
 
       defmodule module_name do
-        use CommandEx.Command, resource_type: "Sample", resource_id: :id
+        use EctoCommand.Command, resource_type: "Sample", resource_id: :id
 
         command do
           param :name, :string

@@ -1,12 +1,12 @@
-defmodule CommandEx.OpenApi do
+defmodule EctoCommand.OpenApi do
   @moduledoc false
 
   @doc false
   defmacro __using__(opts \\ []) do
     quote bind_quoted: [opts: opts, module: __MODULE__] do
-      alias CommandEx.OpenApi.Type
+      alias EctoCommand.OpenApi.Type
 
-      @commandex_openapi_options opts
+      @ecto_command_openapi_options opts
       @before_compile module
     end
   end
@@ -21,7 +21,7 @@ defmodule CommandEx.OpenApi do
 
             if opts[:internal] != true do
               required = if Enum.member?([true, []], opts[:required]), do: [name | required], else: required
-              options = Enum.reduce(opts, %{type: type}, &CommandEx.OpenApi.schema_for/2)
+              options = Enum.reduce(opts, %{type: type}, &EctoCommand.OpenApi.schema_for/2)
               fields = Map.put(fields, name, struct!(OpenApiSpex.Schema, options))
               {fields, required}
             else
@@ -30,8 +30,8 @@ defmodule CommandEx.OpenApi do
           end)
 
         %OpenApiSpex.Schema{
-          title: @commandex_openapi_options[:title] || __MODULE__,
-          type: @commandex_openapi_options[:type] || :object,
+          title: @ecto_command_openapi_options[:title] || __MODULE__,
+          type: @ecto_command_openapi_options[:type] || :object,
           properties: properties,
           required: required
         }

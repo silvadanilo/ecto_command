@@ -1,8 +1,8 @@
-defmodule Unit.CommandEx.Command.CreationTest do
+defmodule Unit.EctoCommand.Command.CreationTest do
   @moduledoc false
 
   use ExUnit.Case, async: true
-  use CommandEx.Test.CommandCase
+  use EctoCommand.Test.CommandCase
 
   describe "new/1 function" do
     test "returns a valid command struct when there are not validations error" do

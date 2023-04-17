@@ -1,17 +1,17 @@
-defmodule Unit.CommandEx.Command.MiddlewareTest do
+defmodule Unit.EctoCommand.Command.MiddlewareTest do
   @moduledoc false
 
   use ExUnit.Case, async: true
-  use CommandEx.Test.CommandCase
+  use EctoCommand.Test.CommandCase
 
-  alias CommandEx.Middleware.Pipeline
+  alias EctoCommand.Middleware.Pipeline
 
   defmodule SampleMiddleware do
     @moduledoc false
 
-    alias CommandEx.Middleware.Pipeline
+    alias EctoCommand.Middleware.Pipeline
 
-    @behaviour CommandEx.Middleware
+    @behaviour EctoCommand.Middleware
 
     @doc false
     defmacro __using__(opts \\ []) do
@@ -68,14 +68,14 @@ defmodule Unit.CommandEx.Command.MiddlewareTest do
   end
 
   defmodule SampleCommand do
-    use CommandEx.Command
+    use EctoCommand.Command
 
     command do
       param :name, :string, required: true
     end
 
     def execute(%__MODULE__{} = command) do
-      case Process.get(:command_execution_should_fails, false) do
+      case Process.get(:ecto_commandecution_should_fails, false) do
         true -> {:error, :an_error}
         false -> {:executed, command}
       end
@@ -83,13 +83,13 @@ defmodule Unit.CommandEx.Command.MiddlewareTest do
   end
 
   setup do
-    Application.put_env(:command_ex, :middlewares, [
-      {Unit.CommandEx.Command.MiddlewareTest.SampleMiddleware, middleware_name: :first_middleware},
-      {Unit.CommandEx.Command.MiddlewareTest.SampleMiddleware, middleware_name: :second_middleware}
+    Application.put_env(:ecto_command, :middlewares, [
+      {Unit.EctoCommand.Command.MiddlewareTest.SampleMiddleware, middleware_name: :first_middleware},
+      {Unit.EctoCommand.Command.MiddlewareTest.SampleMiddleware, middleware_name: :second_middleware}
     ])
 
     on_exit(fn ->
-      Application.put_env(:command_ex, :middlewares, [])
+      Application.put_env(:ecto_command, :middlewares, [])
     end)
   end
 
@@ -152,7 +152,7 @@ defmodule Unit.CommandEx.Command.MiddlewareTest do
 
   describe "a middleware after_failure function" do
     test "is called (in reverse order) for every registered middleware when the execution fails" do
-      Process.put(:command_execution_should_fails, true)
+      Process.put(:ecto_commandecution_should_fails, true)
 
       assert {:error, :an_error} = SampleCommand.execute(%{name: "foo"})
       assert [:second_middleware, :first_middleware] = Process.get(:after_failure, [])
@@ -164,7 +164,7 @@ defmodule Unit.CommandEx.Command.MiddlewareTest do
         Pipeline.respond(pipeline, {:ok, :updated_result})
       end)
 
-      Process.put(:command_execution_should_fails, true)
+      Process.put(:ecto_commandecution_should_fails, true)
 
       assert {:ok, :updated_result} = SampleCommand.execute(%{name: "foo"})
     end
@@ -172,7 +172,7 @@ defmodule Unit.CommandEx.Command.MiddlewareTest do
 
   describe "use command defined middlewares when are set" do
     defmodule SampleCommandWithMiddlewares do
-      use CommandEx.Command
+      use EctoCommand.Command
       use SampleMiddleware, middleware_name: :third_middleware
       use SampleMiddleware, middleware_name: :fourth_middleware
 
@@ -188,7 +188,8 @@ defmodule Unit.CommandEx.Command.MiddlewareTest do
     test "middlewares are executed in the right order" do
       assert {:executed, _command} = SampleCommandWithMiddlewares.execute(%{name: "foo"})
 
-      assert [:first_middleware, :second_middleware, :third_middleware, :fourth_middleware] = Process.get(:before_execution, [])
+      assert [:first_middleware, :second_middleware, :third_middleware, :fourth_middleware] =
+               Process.get(:before_execution, [])
     end
   end
 end

@@ -1,8 +1,8 @@
-defmodule Unit.CommandEx.Command.ValidatorsTest do
+defmodule Unit.EctoCommand.Command.ValidatorsTest do
   @moduledoc false
 
   use ExUnit.Case, async: true
-  use CommandEx.Test.CommandCase
+  use EctoCommand.Test.CommandCase
 
   describe "all ecto validators are supported" do
     test "change" do

@@ -1,6 +1,6 @@
-defmodule CommandEx do
+defmodule EctoCommand do
   @moduledoc """
-  Documentation for `CommandEx`.
+  Documentation for `EctoCommand`.
   """
 
   @doc """
@@ -8,7 +8,7 @@ defmodule CommandEx do
 
   ## Examples
 
-      iex> CommandEx.hello()
+      iex> EctoCommand.hello()
       :world
 
   """

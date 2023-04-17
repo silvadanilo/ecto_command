@@ -1,15 +1,15 @@
-defmodule CommandEx.Middleware do
+defmodule EctoCommand.Middleware do
   @moduledoc """
   Middleware provides an extension point to add functions that you want to be
   called for every command execution
 
-  Implement the `CommandEx.Middleware` behaviour in your module and define the
+  Implement the `EctoCommand.Middleware` behaviour in your module and define the
   `c:before_execution/2`, `c:after_execution/2`, `c:after_failure/2` and `c:invalid/2` callback functions.
 
   ## Example middleware
 
       defmodule SampleMiddleware do
-        @behaviour CommandEx.Middleware
+        @behaviour EctoCommand.Middleware
 
         @impl true
         def before_execution(pipeline, _opts) do
@@ -38,7 +38,7 @@ defmodule CommandEx.Middleware do
       end
   """
 
-  alias CommandEx.Middleware.Pipeline
+  alias EctoCommand.Middleware.Pipeline
 
   @type pipeline :: %Pipeline{}
 

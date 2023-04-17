@@ -1,8 +1,8 @@
-defmodule Unit.CommandEx.Command.ExtraValidatorsTest do
+defmodule Unit.EctoCommand.Command.ExtraValidatorsTest do
   @moduledoc false
 
   use ExUnit.Case, async: true
-  use CommandEx.Test.CommandCase
+  use EctoCommand.Test.CommandCase
 
   test "is it possible to define an extra validator function" do
     module_name = String.to_atom("Sample#{:rand.uniform(999_999)}")
@@ -10,7 +10,7 @@ defmodule Unit.CommandEx.Command.ExtraValidatorsTest do
     define_a_module_with_fields module_name do
       param :name, :string
       param :surname, :string
-      extra_validator(&Unit.CommandEx.Command.ExtraValidatorsTest.custom_validation/2)
+      extra_validator(&Unit.EctoCommand.Command.ExtraValidatorsTest.custom_validation/2)
     end
 
     changeset = module_name.changeset(%{name: "foo", surname: "bar"})
@@ -24,12 +24,12 @@ defmodule Unit.CommandEx.Command.ExtraValidatorsTest do
       param :name, :string
       param :surname, :string
 
-      extra_validator(&Unit.CommandEx.Command.ExtraValidatorsTest.custom_validation/2,
+      extra_validator(&Unit.EctoCommand.Command.ExtraValidatorsTest.custom_validation/2,
         field: :name,
         message: "my custom message"
       )
 
-      extra_validator(&Unit.CommandEx.Command.ExtraValidatorsTest.custom_validation/2,
+      extra_validator(&Unit.EctoCommand.Command.ExtraValidatorsTest.custom_validation/2,
         field: :surname,
         message: "my custom message"
       )

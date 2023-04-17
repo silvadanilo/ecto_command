@@ -1,8 +1,8 @@
-defmodule CommandExTest do
+defmodule EctoCommandTest do
   use ExUnit.Case
-  doctest CommandEx
+  doctest EctoCommand
 
   test "greets the world" do
-    assert CommandEx.hello() == :world
+    assert EctoCommand.hello() == :world
   end
 end

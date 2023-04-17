@@ -1,9 +1,9 @@
-defmodule CommandEx.MixProject do
+defmodule EctoCommand.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :command_ex,
+      app: :ecto_command,
       version: "0.1.0",
       elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),

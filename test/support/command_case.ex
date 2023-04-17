@@ -1,7 +1,7 @@
-defmodule CommandEx.Test.CommandCase do
+defmodule EctoCommand.Test.CommandCase do
   defmacro __using__(_) do
     quote do
-      import CommandEx.Test.CommandCase
+      import EctoCommand.Test.CommandCase
     end
   end
 
@@ -16,7 +16,7 @@ defmodule CommandEx.Test.CommandCase do
   defmacro define_a_module_with_fields(module_name, do: block) do
     quote do
       defmodule unquote(module_name) do
-        use CommandEx.Command, resource_type: "Sample", resource_id: :id
+        use EctoCommand.Command, resource_type: "Sample", resource_id: :id
 
         command do
           unquote(block)

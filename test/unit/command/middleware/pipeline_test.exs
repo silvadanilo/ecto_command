@@ -1,4 +1,4 @@
-defmodule Unit.CommandEx.Middleware.PipelineTest do
+defmodule Unit.EctoCommand.Middleware.PipelineTest do
   @moduledoc false
 
   use ExUnit.Case, async: true
@@ -11,8 +11,8 @@ defmodule Unit.CommandEx.Middleware.PipelineTest do
     end
   end
 
-  alias CommandEx.Middleware.Pipeline
-  alias Unit.CommandEx.Middleware.PipelineTest.SampleCommand
+  alias EctoCommand.Middleware.Pipeline
+  alias Unit.EctoCommand.Middleware.PipelineTest.SampleCommand
 
-  doctest CommandEx.Middleware.Pipeline, import: true
+  doctest EctoCommand.Middleware.Pipeline, import: true
 end

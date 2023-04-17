@@ -1,8 +1,8 @@
-defmodule CommandEx.Command do
+defmodule EctoCommand.Command do
   @moduledoc false
 
-  alias CommandEx.Command
-  alias CommandEx.Middleware.Pipeline
+  alias EctoCommand.Command
+  alias EctoCommand.Middleware.Pipeline
 
   @command_options [:internal, :trim, :doc]
   @valid_validators [
@@ -21,7 +21,7 @@ defmodule CommandEx.Command do
   @doc false
   defmacro __using__(_) do
     quote do
-      import CommandEx.Command,
+      import EctoCommand.Command,
         only: [command: 1, param: 2, param: 3, extra_validator: 1, extra_validator: 2, internal: 2, internal: 3]
 
       import Ecto.Changeset
@@ -66,7 +66,7 @@ defmodule CommandEx.Command do
           params: params,
           metadata: metadata,
           handler: __MODULE__,
-          middlewares: Application.get_env(:command_ex, :middlewares, []) ++ Enum.reverse(@middlewares)
+          middlewares: Application.get_env(:ecto_command, :middlewares, []) ++ Enum.reverse(@middlewares)
         })
       end
 
