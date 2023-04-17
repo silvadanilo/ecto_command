@@ -69,8 +69,6 @@ defmodule Unit.CommandEx.Command.MiddlewareTest do
 
   defmodule SampleCommand do
     use CommandEx.Command
-    use SampleMiddleware, middleware_name: :first_middleware
-    use SampleMiddleware, middleware_name: :second_middleware
 
     command do
       param :name, :string, required: true
@@ -82,6 +80,17 @@ defmodule Unit.CommandEx.Command.MiddlewareTest do
         false -> {:executed, command}
       end
     end
+  end
+
+  setup do
+    Application.put_env(:command_ex, :middlewares, [
+      {Unit.CommandEx.Command.MiddlewareTest.SampleMiddleware, middleware_name: :first_middleware},
+      {Unit.CommandEx.Command.MiddlewareTest.SampleMiddleware, middleware_name: :second_middleware}
+    ])
+
+    on_exit(fn ->
+      Application.put_env(:command_ex, :middlewares, [])
+    end)
   end
 
   describe "a middleware before_execution function" do
@@ -158,6 +167,28 @@ defmodule Unit.CommandEx.Command.MiddlewareTest do
       Process.put(:command_execution_should_fails, true)
 
       assert {:ok, :updated_result} = SampleCommand.execute(%{name: "foo"})
+    end
+  end
+
+  describe "use command defined middlewares when are set" do
+    defmodule SampleCommandWithMiddlewares do
+      use CommandEx.Command
+      use SampleMiddleware, middleware_name: :third_middleware
+      use SampleMiddleware, middleware_name: :fourth_middleware
+
+      command do
+        param :name, :string, required: true
+      end
+
+      def execute(%__MODULE__{} = command) do
+        {:executed, command}
+      end
+    end
+
+    test "middlewares are executed in the right order" do
+      assert {:executed, _command} = SampleCommandWithMiddlewares.execute(%{name: "foo"})
+
+      assert [:first_middleware, :second_middleware, :third_middleware, :fourth_middleware] = Process.get(:before_execution, [])
     end
   end
 end

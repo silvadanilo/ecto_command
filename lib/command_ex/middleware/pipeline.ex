@@ -120,7 +120,6 @@ defmodule CommandEx.Middleware.Pipeline do
   """
   def halt(%Pipeline{} = pipeline, response), do: %Pipeline{pipeline | halted: true} |> respond(response)
 
-
   @doc """
   Extract the response from the pipeline, return the error if it is set
   return the stored response otherwise
@@ -173,7 +172,6 @@ defmodule CommandEx.Middleware.Pipeline do
     chain(apply(module, stage, [pipeline, opts]), stage, modules)
   end
 
-
   @doc """
   Executes the function 'execute/1' in the handler module, pass the command to it.
   Halt the pipeline if command or handler are not set
@@ -187,10 +185,12 @@ defmodule CommandEx.Middleware.Pipeline do
   def execute(%Pipeline{halted: true} = pipeline), do: pipeline
   def execute(%Pipeline{handler: nil} = pipeline), do: halt(pipeline, {:error, "handler was not set"})
   def execute(%Pipeline{command: nil} = pipeline), do: halt(pipeline, {:error, "command was not initialized"})
+
   def execute(%Pipeline{command: command} = pipeline) do
     case pipeline.handler.execute(command) do
       {:error, error} ->
         error(pipeline, error)
+
       result ->
         respond(pipeline, result)
     end

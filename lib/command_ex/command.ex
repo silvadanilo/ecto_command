@@ -62,10 +62,17 @@ defmodule CommandEx.Command do
       end
 
       def execute(%{} = params, metadata \\ %{}) when is_map(params) do
-        Command.execute(%Pipeline{params: params, metadata: metadata, handler: __MODULE__, middlewares: @middlewares})
+        Command.execute(%Pipeline{
+          params: params,
+          metadata: metadata,
+          handler: __MODULE__,
+          middlewares: Application.get_env(:command_ex, :middlewares, []) ++ Enum.reverse(@middlewares)
+        })
       end
 
-      def __fill_internal_fields(changeset, metadata), do: __fill_internal_fields(changeset, metadata, Enum.reverse(@internal_fields))
+      def __fill_internal_fields(changeset, metadata),
+        do: __fill_internal_fields(changeset, metadata, Enum.reverse(@internal_fields))
+
       def __fill_internal_fields(%{valid?: false} = changeset, _metadata, _internal_fields), do: changeset
       def __fill_internal_fields(changeset, _metadata, []), do: changeset
 
@@ -198,10 +205,10 @@ defmodule CommandEx.Command do
   def execute(%Pipeline{} = pipeline) do
     pipeline
     |> instantiate_command()
-    |> Pipeline.chain(:before_execution, Enum.reverse(pipeline.middlewares))
+    |> Pipeline.chain(:before_execution, pipeline.middlewares)
     |> Pipeline.execute()
-    |> Pipeline.chain(:after_execution, pipeline.middlewares)
-    |> Pipeline.chain(:after_failure, pipeline.middlewares)
+    |> Pipeline.chain(:after_execution, Enum.reverse(pipeline.middlewares))
+    |> Pipeline.chain(:after_failure, Enum.reverse(pipeline.middlewares))
     |> Pipeline.response()
   end
 
@@ -209,10 +216,11 @@ defmodule CommandEx.Command do
     case handler.new(params, metadata) do
       {:ok, command} ->
         Pipeline.set(pipeline, :command, command)
+
       {:error, error} ->
         pipeline
         |> Pipeline.respond({:error, error})
-        |> Pipeline.chain(:invalid, Enum.reverse(pipeline.middlewares))
+        |> Pipeline.chain(:invalid, pipeline.middlewares)
         |> Pipeline.halt()
     end
   end
