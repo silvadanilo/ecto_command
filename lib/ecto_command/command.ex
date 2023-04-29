@@ -118,6 +118,24 @@ defmodule EctoCommand.Command do
                         unquote(validator_fn)
                       )
 
+            {field, validator, data, options}, acc ->
+              quote do:
+                      unquote(acc)
+                      |> unquote(String.to_atom("validate_#{Atom.to_string(validator)}"))(
+                        unquote(field),
+                        unquote(data),
+                        unquote(options)
+                      )
+
+            {field, validator, {data, options}}, acc ->
+              quote do:
+                      unquote(acc)
+                      |> unquote(String.to_atom("validate_#{Atom.to_string(validator)}"))(
+                        unquote(field),
+                        unquote(data),
+                        unquote(options)
+                      )
+
             {field, validator, options}, acc ->
               quote do:
                       unquote(acc)
