@@ -1,12 +1,11 @@
 # EctoCommand
 
 EctoCommand is a toolkit for mapping, validating, and executing commands received from any source.
-It provides a simple and flexible way to define and execute commands in Elixir. With its support for validation, middleware, and automatic OpenAPI documentation generation, it's a valuable tool for building scalable and maintainable Elixir applications. We hope you find it useful!
+It provides a simple and flexible way to define and execute commands in Elixir. With support for validation, middleware, and automatic OpenAPI documentation generation, it's a valuable tool for building scalable and maintainable Elixir applications. We hope you find it useful!
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `ecto_command` to your list of dependencies in `mix.exs`:
+To install EctoCommand, add it as a dependency to your project by adding `ecto_command` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
@@ -19,13 +18,12 @@ end
 ## Why Ecto?
 
 "Ecto is also commonly used to map data from any source into Elixir structs, whether they are backed by a database or not."  
-Based on this definition of the [Ecto](https://github.com/elixir-ecto/ecto) library **EctoCommand** utilizes the "embedded_schema" functionality to map input data into an elixir data structure to be used as a "command".  
-**This means that EctoCommand is not tied to your persistence layer.**
+Based on this definition of the [Ecto](https://github.com/elixir-ecto/ecto) library, **EctoCommand** utilizes the "embedded_schema" functionality to map input data into an Elixir data structure to be used as a "command".  
+This means that **EctoCommand is not tied to your persistence layer**.
 
-As a result, you can easily convert data received from any source into a valid command struct, which can be executed easily. 
-Additionally, you can also add functionality through middlewares to the execution pipeline.  
+As a result, you can easily convert data received from any source into a valid command struct, which can be executed easily. Additionally, you can also add functionality through middlewares to the execution pipeline.
 
-Here is an example:
+Here is an example of a command definition:
 
 ```elixir
 defmodule SampleCommand do
@@ -38,7 +36,7 @@ defmodule SampleCommand do
     param :count, :integer, required: true, number: [greater_than_or_equal_to: 18, less_than: 100]
     param :password, :string, required: true, length: [greater_than_or_equal_to: 8, less_than: 100], trim: true
 
-    internal :hased_password, :string
+    internal :hashed_password, :string
   end
 
   def execute(%SampleCommand{} = command) do
@@ -46,7 +44,7 @@ defmodule SampleCommand do
     :ok
   end
 
-  def fill(:hased_password, _changeset, %{"password" => password}, _metadata) do
+  def fill(:hashed_password, _changeset, %{"password" => password}, _metadata) do
     :crypto.hash(:sha256, password) |> Base.encode64()
   end
 end
@@ -55,32 +53,101 @@ end
 
 ```
 
+## Usage
+
+### Defining a Command
+
+To define a new command, create a module that includes the `EctoCommand.Command` behaviour and implements the `execute/1` function.  
+The `execute/1` function takes the command structure as an argument.  
+The `command` macro is used to define the parameters included in the command.   
+The `param` macro is used to [define which parameters are accepted by the command](#params-definition), and the `internal` macro is used to [define which parameters are internally set](#internal-fields).
+
+
+```elixir
+defmodule MyApp.Commands.CreatePost do
+  use EctoCommand.Command
+
+  alias MyApp.PostRepository
+
+  command do
+    param :title, :string, required: true, length: [min: 3, max: 255]
+    param :body, :string, required: true, length: [min: 3]
+
+    internal :slug, :string
+    internal :author, :string
+  end
+
+  def execute(%__MODULE__{} = command) do
+    PostRepository.insert(%{
+      title: command.title,
+      body: command.body,
+      slug: command.slug
+    })
+  end
+
+  def fill(:slug, _changeset, %{"title" => title}, _metadata) do
+    Slug.slufigy(title)
+  end
+
+  def fill(:author, _changeset, _params, %{"triggered_by" => triggered_by}) do
+    triggered_by
+  end
+
+  def fill(:author, changeset, _params, _metadata) do
+    Ecto.Changeset.add_error(changeset, :triggered_by, "triggered_by metadata info is missing")
+  end
+end
+```
+
+### Executing a Command
+
+In order to execute the command, you need to call the `execute/2` function providing a raw parameter data map and, optionally, some metadata.  
+```elixir
+params = %{title: "New amazing post", body: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut eget ante odio."}
+metadata = %{triggered_by: "writer"}
+
+:ok = MyApp.Commands.CreatePost.execute(params, metadata)
+```
+This data is validated, and if it passes all validation rules, a new command structure is created and passed as an argument to the `execute/1` function defined inside your command module.
+
+### Handling Errors
+
+If a required parameter is missing or has an invalid value, the `EctoCommand.execute/2` function will return an error tuple with an invalid `Ecto.Changeset` structure. You can then use the changeset to return errors to the client or perform other actions.
+
+```elixir
+{:error, %Ecto.Changeset{valid?: false}} = MyApp.Commands.CreatePost.execute.execute(%{})
+```
+
+Returning an invalid `Ecto.Changeset` is particularly useful when working with Phoenix forms.
+
 ## Main goals and functionality of EctoCommand
 
+EctoCommand aims to provide the following functionality:
+
 - [An easy way to define the fields in a command (`param` macro).](#params-definition)
-- [Provides a simple and compact way of specifying how these fields should be validated (`param` macro options).](#validations-and-constraints-definition)
-- [Defining the fields that need to be part of the command but can't be set from the outside, they must be filled in from within the command (`internal` macro)](#internal-fields)
+- [A simple and compact way of specifying how these fields should be validated (`param` macro options)](#validations-and-constraints-definition)
+- [Defining the fields that need to be part of the command but can't be set from the outside (`internal` macro)](#internal-fields)
 - [Validation of the params received from the outside](#validations)
 - [Easy hooking of middleware to add functionality (like audit)](#using-middlewares-in-ectocommand)
 - [Automatic generation of OpenApi documentation](#automated-generation-of-openapi-documentation)
 
 ## Params definition
 
-To define the params that a command should accept we should use the macro `param`.
-The `param` macro is based on the `field` macro of [Ecto.Schema](https://hexdocs.pm/ecto/Ecto.Schema.html) so it basically defines a field in the schema with a given name and type and it is possible to pass all the options supported also by the `field` macro.
-Afterwards, each defined `param` is cast with the "external" data received
+To define the params that a command should accept, use the `param` macro. 
+The `param` macro is based on the `field` macro of [Ecto.Schema](https://hexdocs.pm/ecto/Ecto.Schema.html) and defines a field in the schema with a given name and type. You can pass all the options supported by the `field` macro. Afterwards, each defined `param` is cast with the "external" data received.
 
 ## Validations and constraints definition
 
-In addition to those options, the `param` macro accepts a set of other options that indicates how external data for that field should be validated.
-These options are applied on the intermediate Changeset that is created in order to validate data.
-These options are mapped into `validate_*` methods of the [Ecto.Changeset](https://hexdocs.pm/ecto/Ecto.Changeset.html)
-So, for example, if you want that command should have a "name" field that is required and it should have a precise length between 2 and 255 chars you could write:
+In addition to those options, the `param` macro accepts a set of other options that indicate how external data for that field should be validated. 
+These options are applied to the intermediate Changeset created in order to validate data. 
+These options are mapped into `validate_*` methods of the [Ecto.Changeset](https://hexdocs.pm/ecto/Ecto.Changeset.html). 
+For example, if you want a command to have a "name" field that is required and has a length between 2 and 255 chars, you can write:
+
 ```Elixir
 param :name, :string, required: true, length: [min: 2, max: 255]
 ```
 
-that it means that the command will have a `name` field, that field will be cast to a `string` type, and these functions will be called on the changeset:
+This means that the command will have a `name` field, which will be cast to a `string` type. These functions will be called during the changeset validation:
 ```Elixir
 changeset
 |> validate_required([:name])
@@ -98,9 +165,8 @@ param :email, :string, format: {~r/@/, message: "my custom error message"}
 
 ## Internal fields
 
-It could be that you need the command to have fields that are not fillable from outside, such as a "hased_password" field (like the example above)
-or a "triggered_by" field that should be filled in based on the currently logged-in user (and we want to avoid that someone could submit the desired triggered_by user)  
-For those cases you could use the `internal` macro:
+Sometimes, you might need to define internal fields, like `hashed_password` or `triggered_by`, which are not supposed to be set externally. To define such fields, you can use the `internal` macro.
+
 ```elixir
   command do
     param :password, :string, required: true, length: [greater_than_or_equal_to: 8, less_than: 100], trim: true
@@ -121,16 +187,27 @@ For those cases you could use the `internal` macro:
   end
 ```
 
-Internal fields will be ignored during the "cast process". Instead, you will need to create a public `fill/4` function to populate them.  
-The `fill/4` function takes four arguments: the name of the field, the current temporary changeset, the parameters received from external sources, and additional metadata.  
-You can choose to return the value that will populate the field or the updated changeset. Both options are acceptable, but returning the changeset is particularly useful if you want to add errors to it.
+These fields will be ignored during the "cast process". Instead, you need to define a public `fill/4` function to populate them. The `fill/4` function takes four arguments: the name of the field, the current temporary changeset, the parameters received from external sources, and additional metadata. You can choose to return the value that will populate the field or the updated changeset. Both options are acceptable, but returning the changeset is particularly useful if you want to add errors to it.
 
 ## Validations 
-FIXME
+
+All parameters are validated in order to instantiate the command structure. 
+When you use `EctoCommand.Command` inside your module, three methods are added:
+
+- `changeset/2`
+- `new/2`
+- `execute/2`
+
+All three methods take parameter data and metadata as arguments. 
+The `changeset/2` function performs validation and other operations, and returns a valid or invalid `Ecto.Changeset`.  
+The `new/2` function internally calls the `changeset/2` function and returns either the valid command structure or the invalid `Ecto.Changeset`.  
+The `execute/2` function internally calls the `new/2` function and then calls the `execute/1` function (which should be defined inside the command module), or returns the invalid `Ecto.Changeset`.
 
 ## Using Middlewares in EctoCommand
-EctoCommand provides support for middlewares, which allow you to modify the behavior of a command before and/or after its execution. 
-A middleware is a module that implements the EctoCommand.Middleware behavior. Here's how you can use middlewares in your EctoCommand project:
+
+EctoCommand supports middlewares, which allow you to modify the behavior of a command before and/or after its execution. 
+
+A middleware is a module that implements the `EctoCommand.Middleware` behavior. Here's how you can use middlewares in your EctoCommand project:
 
 ```elixir
 defmodule MyApp.MyMiddleware do
@@ -247,7 +324,7 @@ For more information on serving the Swagger UI, please refer to the readme of th
 Contributions are always welcome! Please feel free to submit a pull request or create an issue if you find a bug or have a feature request.
 
 ## License
-EctoCommand is released under the MIT License. See the LICENSE file for more information.
+This library is licensed under the MIT license. See [LICENSE](https://github.com/silvadanilo/ecto_command/blob/master/LICENSE) for more details.
 
 
 > Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
