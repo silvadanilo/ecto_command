@@ -21,6 +21,8 @@ defmodule EctoCommand.MixProject do
 
       # Docs
       name: "EctoCommand",
+      description: "EctoCommand is a toolkit for mapping, validating, and executing commands received from any source.",
+      package: package(),
       source_url: "https://github.com/silvadanilo/ecto_command",
       homepage_url: "https://github.com/silvadanilo/ecto_command",
       docs: [
@@ -34,6 +36,13 @@ defmodule EctoCommand.MixProject do
   def application do
     [
       extra_applications: [:logger]
+    ]
+  end
+
+  defp package() do
+    [
+      licenses: ["MIT License"],
+      links: %{"GitHub" => "https://github.com/silvadanilo/ecto_command"}
     ]
   end
 
