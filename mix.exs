@@ -17,7 +17,16 @@ defmodule EctoCommand.MixProject do
         "ecto.reset.test": :test,
         "test.slow": :test
       ],
-      deps: deps()
+      deps: deps(),
+
+      # Docs
+      name: "EctoCommand",
+      source_url: "https://github.com/silvadanilo/ecto_command",
+      homepage_url: "https://github.com/silvadanilo/ecto_command",
+      docs: [
+        main: "EctoCommand", # The main page in the docs
+        extras: ["README.md"]
+      ]
     ]
   end
 
@@ -30,13 +39,17 @@ defmodule EctoCommand.MixProject do
 
   # Specifies which paths to compile per environment.
   defp elixirc_paths(:test), do: ["lib", "test/support"]
-  defp elixirc_paths(_), do: ["lib"]
+  defp elixirc_paths(_), do: ["sample", "lib"]
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
       {:ecto_sql, "~> 3.6"},
       {:open_api_spex, "~> 3.16"},
+
+      # dev
+      {:ex_doc, "~> 0.27", only: :dev, runtime: false},
+      {:makeup_html, ">= 0.0.0", only: :dev, runtime: false},
 
       # test
       {:excoveralls, "~> 0.15.3", only: [:dev, :test]}
