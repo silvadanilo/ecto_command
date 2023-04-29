@@ -325,8 +325,3 @@ Contributions are always welcome! Please feel free to submit a pull request or c
 
 ## License
 This library is licensed under the MIT license. See [LICENSE](https://github.com/silvadanilo/ecto_command/blob/master/LICENSE) for more details.
-
-
-> Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-> and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-> be found at <https://hexdocs.pm/ecto_command>.

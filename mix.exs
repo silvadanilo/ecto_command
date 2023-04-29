@@ -41,7 +41,7 @@ defmodule EctoCommand.MixProject do
 
   defp package() do
     [
-      licenses: ["MIT License"],
+      licenses: ["MIT"],
       links: %{"GitHub" => "https://github.com/silvadanilo/ecto_command"}
     ]
   end
