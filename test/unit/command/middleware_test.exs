@@ -1,4 +1,4 @@
-defmodule Unit.EctoCommand.Command.MiddlewareTest do
+defmodule Unit.EctoCommand.MiddlewareTest do
   @moduledoc false
 
   use ExUnit.Case, async: true
@@ -68,7 +68,7 @@ defmodule Unit.EctoCommand.Command.MiddlewareTest do
   end
 
   defmodule SampleCommand do
-    use EctoCommand.Command
+    use EctoCommand
 
     command do
       param :name, :string, required: true
@@ -84,8 +84,8 @@ defmodule Unit.EctoCommand.Command.MiddlewareTest do
 
   setup do
     Application.put_env(:ecto_command, :middlewares, [
-      {Unit.EctoCommand.Command.MiddlewareTest.SampleMiddleware, middleware_name: :first_middleware},
-      {Unit.EctoCommand.Command.MiddlewareTest.SampleMiddleware, middleware_name: :second_middleware}
+      {Unit.EctoCommand.MiddlewareTest.SampleMiddleware, middleware_name: :first_middleware},
+      {Unit.EctoCommand.MiddlewareTest.SampleMiddleware, middleware_name: :second_middleware}
     ])
 
     on_exit(fn ->
@@ -172,7 +172,7 @@ defmodule Unit.EctoCommand.Command.MiddlewareTest do
 
   describe "use command defined middlewares when are set" do
     defmodule SampleCommandWithMiddlewares do
-      use EctoCommand.Command
+      use EctoCommand
       use SampleMiddleware, middleware_name: :third_middleware
       use SampleMiddleware, middleware_name: :fourth_middleware
 

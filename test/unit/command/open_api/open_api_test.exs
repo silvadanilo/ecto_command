@@ -7,7 +7,7 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
   defmodule Sample do
     @moduledoc false
 
-    use EctoCommand.Command
+    use EctoCommand
     use EctoCommand.OpenApi, title: "Sample"
 
     command do

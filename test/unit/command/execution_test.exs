@@ -1,4 +1,4 @@
-defmodule Unit.EctoCommand.Command.ExecutionTest do
+defmodule Unit.EctoCommand.ExecutionTest do
   @moduledoc false
 
   use ExUnit.Case, async: true
@@ -9,7 +9,7 @@ defmodule Unit.EctoCommand.Command.ExecutionTest do
       module_name = String.to_atom("Sample#{:rand.uniform(999_999)}")
 
       defmodule module_name do
-        use EctoCommand.Command
+        use EctoCommand
 
         command do
           param :name, :string, required: true

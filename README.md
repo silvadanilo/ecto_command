@@ -27,7 +27,7 @@ Here is an example of a command definition:
 
 ```elixir
 defmodule SampleCommand do
-  use EctoCommand.Command
+  use EctoCommand
 
   command do
     param :id, :string
@@ -57,7 +57,7 @@ end
 
 ### Defining a Command
 
-To define a new command, create a module that includes the `EctoCommand.Command` behaviour and implements the `execute/1` function.  
+To define a new command, create a module that includes the `EctoCommand` behaviour and implements the `execute/1` function.  
 The `execute/1` function takes the command structure as an argument.  
 The `command` macro is used to define the parameters included in the command.   
 The `param` macro is used to [define which parameters are accepted by the command](#params-definition), and the `internal` macro is used to [define which parameters are internally set](#internal-fields).
@@ -65,7 +65,7 @@ The `param` macro is used to [define which parameters are accepted by the comman
 
 ```elixir
 defmodule MyApp.Commands.CreatePost do
-  use EctoCommand.Command
+  use EctoCommand
 
   alias MyApp.PostRepository
 
@@ -192,7 +192,7 @@ These fields will be ignored during the "cast process". Instead, you need to def
 ## Validations 
 
 All parameters are validated in order to instantiate the command structure. 
-When you use `EctoCommand.Command` inside your module, three methods are added:
+When you use `EctoCommand` inside your module, three methods are added:
 
 - `changeset/2`
 - `new/2`
@@ -267,7 +267,7 @@ You can also specify middleware to be executed for a specific command by adding 
 
 ```elixir
 defmodule MyApp.MyCommand do
-  use EctoCommand.Command
+  use EctoCommand
   use MyApp.MyFirstMiddleware, a_middleware_option: :foo
   use MyApp.MySecondMiddleware, a_middleware_option: :bar
 

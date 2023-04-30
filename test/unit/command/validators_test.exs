@@ -1,4 +1,4 @@
-defmodule Unit.EctoCommand.Command.ValidatorsTest do
+defmodule Unit.EctoCommand.ValidatorsTest do
   @moduledoc false
 
   use ExUnit.Case, async: true

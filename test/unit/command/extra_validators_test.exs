@@ -1,4 +1,4 @@
-defmodule Unit.EctoCommand.Command.ExtraValidatorsTest do
+defmodule Unit.EctoCommand.ExtraValidatorsTest do
   @moduledoc false
 
   use ExUnit.Case, async: true
@@ -10,7 +10,7 @@ defmodule Unit.EctoCommand.Command.ExtraValidatorsTest do
     define_a_module_with_fields module_name do
       param :name, :string
       param :surname, :string
-      validate_with(&Unit.EctoCommand.Command.ExtraValidatorsTest.custom_validation/2)
+      validate_with(&Unit.EctoCommand.ExtraValidatorsTest.custom_validation/2)
     end
 
     changeset = module_name.changeset(%{name: "foo", surname: "bar"})
@@ -24,12 +24,12 @@ defmodule Unit.EctoCommand.Command.ExtraValidatorsTest do
       param :name, :string
       param :surname, :string
 
-      validate_with(&Unit.EctoCommand.Command.ExtraValidatorsTest.custom_validation/2,
+      validate_with(&Unit.EctoCommand.ExtraValidatorsTest.custom_validation/2,
         field: :name,
         message: "my custom message"
       )
 
-      validate_with(&Unit.EctoCommand.Command.ExtraValidatorsTest.custom_validation/2,
+      validate_with(&Unit.EctoCommand.ExtraValidatorsTest.custom_validation/2,
         field: :surname,
         message: "my custom message"
       )

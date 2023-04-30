@@ -16,7 +16,7 @@ defmodule EctoCommand.Test.CommandCase do
   defmacro define_a_module_with_fields(module_name, do: block) do
     quote do
       defmodule unquote(module_name) do
-        use EctoCommand.Command, resource_type: "Sample", resource_id: :id
+        use EctoCommand, resource_type: "Sample", resource_id: :id
 
         command do
           unquote(block)

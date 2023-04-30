@@ -1,4 +1,4 @@
-defmodule Unit.EctoCommand.Command.OptionsTest do
+defmodule Unit.EctoCommand.OptionsTest do
   @moduledoc false
 
   use ExUnit.Case, async: true
@@ -22,7 +22,7 @@ defmodule Unit.EctoCommand.Command.OptionsTest do
       module_name = String.to_atom("Sample#{:rand.uniform(999_999)}")
 
       defmodule module_name do
-        use EctoCommand.Command, resource_type: "Sample", resource_id: :id
+        use EctoCommand, resource_type: "Sample", resource_id: :id
 
         command do
           param :name, :string

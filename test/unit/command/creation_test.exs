@@ -1,4 +1,4 @@
-defmodule Unit.EctoCommand.Command.CreationTest do
+defmodule Unit.EctoCommand.CreationTest do
   @moduledoc false
 
   use ExUnit.Case, async: true
