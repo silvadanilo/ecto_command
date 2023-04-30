@@ -56,7 +56,7 @@ defmodule EctoCommand.Command do
   defmacro __using__(_) do
     quote do
       import EctoCommand.Command,
-        only: [command: 1, param: 2, param: 3, extra_validator: 1, extra_validator: 2, internal: 2, internal: 3]
+        only: [command: 1, param: 2, param: 3, validate_with: 1, validate_with: 2, internal: 2, internal: 3]
 
       import Ecto.Changeset
 
@@ -215,7 +215,7 @@ defmodule EctoCommand.Command do
     end
   end
 
-  defmacro extra_validator(function, opts \\ []) do
+  defmacro validate_with(function, opts \\ []) do
     quote do
       Module.put_attribute(__MODULE__, :validators, {:extra, unquote(function), unquote(opts)})
     end
