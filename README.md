@@ -243,10 +243,11 @@ end
 Each method takes two arguments: an [EctoCommand.Pipeline](https://github.com/silvadanilo/ecto_command/blob/master/lib/ecto_command/middleware/pipeline.ex) structure and the options you set for that middleware.  
 The method should return an EctoCommand.Pipeline structure.
 
-- `before_execution/2` is executed before command execution, it is executed only if the command is valid. In this function you could, if you wish, also update the command that will be executed.
-- `after_execution/2` is executed after command successfully execution. In this function you could, if you wish, also update the returned value.
-- `after_failure/2` is executed after command successfully execution. In this function you could, if you wish, also update the returned value.
-- `invalid/2` is executed when data to build the command is invalid. 
+- `before_execution/2` is executed before command execution, and only if the command is valid. In this function, if you'd like, you might update the command that will be executed.
+- `after_execution/2` is executed following a sucessful command execution. In this function, if you'd like, you could alter the returned value.
+- `after_failure/2` is executed after a failed command execution. In this function you could, if you wish, also update the returned value.
+- `invalid/2` is executed when data used to build the command is invalid.
+
 
 ### Configuring Middlewares
 There are two ways to specify which middleware should be executed:
