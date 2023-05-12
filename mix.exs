@@ -4,7 +4,7 @@ defmodule EctoCommand.MixProject do
   def project do
     [
       app: :ecto_command,
-      version: "0.1.1",
+      version: "0.2.0",
       elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -26,7 +26,8 @@ defmodule EctoCommand.MixProject do
       source_url: "https://github.com/silvadanilo/ecto_command",
       homepage_url: "https://github.com/silvadanilo/ecto_command",
       docs: [
-        main: "EctoCommand", # The main page in the docs
+        # The main page in the docs
+        main: "EctoCommand",
         extras: ["README.md"]
       ]
     ]

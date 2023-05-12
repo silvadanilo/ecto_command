@@ -189,6 +189,55 @@ Sometimes, you might need to define internal fields, like `hashed_password` or `
 
 These fields will be ignored during the "cast process". Instead, you need to define a public `fill/4` function to populate them. The `fill/4` function takes four arguments: the name of the field, the current temporary changeset, the parameters received from external sources, and additional metadata. You can choose to return the value that will populate the field or the updated changeset. Both options are acceptable, but returning the changeset is particularly useful if you want to add errors to it.
 
+## Subparams
+
+Your API can accept structured data by utilizing "subparams" within the request.  
+To enable the submission of complex information in a hierarchical format, you can utilize the `embeds_one/3` macro. This macro allows you to define a field that is composed of other fields, which are subsequently validated.  
+The arguments for the macro are: the name of the main parameter, the name of the embedded module (which can either exist or be created), and optionally, the parameters of the new embedded module.
+
+In the following example, we demonstrate how you can provide a name, surname, and an address field, which is composed of street, city, and zip_code.
+```elixir
+defmodule SampleCommand do
+  use EctoCommand
+
+  command do
+    param :name, :string
+    param :surname, :string
+
+    embeds_one :address, Address do
+      param :street, :string, required: true
+      param :city, :string, required: true, length: [min: 10]
+      param :zip, :string, required: true
+    end
+  end
+end
+```
+In the above example, a new `SampleCommand.Address` module will be created.  
+Alternatively, you can achieve the same behavior by writing:
+```elixir
+defmodule SampleCommand.Address do
+  use EctoCommand
+
+  command do
+    param :street, :string, required: true
+    param :city, :string, required: true, length: [min: 10]
+    param :zip, :string, required: true
+  end
+end
+
+defmodule SampleCommand do
+  use EctoCommand
+
+  command do
+    param :name, :string
+    param :surname, :string
+
+    embeds_one :address, Address
+  end
+end
+```
+In the second example, an existing module is embedded, providing the same functionality. Feel free to choose the approach that best suits your needs.
+
 ## Validations 
 
 All parameters are validated in order to instantiate the command structure. 

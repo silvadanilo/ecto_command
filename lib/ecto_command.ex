@@ -56,7 +56,17 @@ defmodule EctoCommand do
   defmacro __using__(_) do
     quote do
       import EctoCommand,
-        only: [command: 1, param: 2, param: 3, validate_with: 1, validate_with: 2, internal: 2, internal: 3]
+        only: [
+          command: 1,
+          param: 2,
+          param: 3,
+          validate_with: 1,
+          validate_with: 2,
+          internal: 2,
+          internal: 3,
+          embeds_one: 3,
+          cast_embedded_fields: 2
+        ]
 
       import Ecto.Changeset
 
@@ -93,19 +103,25 @@ defmodule EctoCommand do
         |> apply_action(:insert)
       end
 
-
       # The changeset/2 function creates a new changeset with the given params and validates it against the given schema.
       # It also fills the internal fields with the given metadata.
       # ## Examples
       #    changeset(%{name: "John", age: 28})
       #    changeset(%{name: "John", age: 28}, %{user_id: 1})
       @spec changeset(params :: map, metadata :: map) :: Ecto.Changeset.t()
-      def changeset(%{} = params, metadata \\ %{}) do
+      def changeset(params, metadata \\ %{})
+
+      def changeset(struct, params) when is_struct(struct) do
+        changeset(params, %{})
+      end
+
+      def changeset(%{} = params, metadata) do
         params = EctoCommand.trim_fields(params, @trim_fields)
 
         __MODULE__
         |> struct!(%{})
         |> cast(params, @cast_fields)
+        |> cast_embedded_fields(Keyword.keys(@ecto_embeds))
         |> __validate()
         |> __fill_internal_fields(metadata)
       end
@@ -157,6 +173,7 @@ defmodule EctoCommand do
         @primary_key false
 
         embedded_schema do
+          import Ecto.Schema, except: [embeds_one: 3, embeds_one: 4]
           unquote(parse_block(block))
         end
       end
@@ -255,7 +272,9 @@ defmodule EctoCommand do
       param :title, :string, required: true, length: [min: 3, max: 255]
       param :body, :string, required: true, length: [min: 3]
   """
-  defmacro param(name, type, opts \\ []) do
+  defmacro param(name, type, opts \\ [])
+
+  defmacro param(name, type, opts) do
     quote do
       opts = unquote(opts)
 
@@ -292,6 +311,20 @@ defmodule EctoCommand do
     end
   end
 
+  defmacro embeds_one(name, schema, do: block) do
+    quote do
+      defmodule unquote(schema) do
+        use EctoCommand
+
+        command do
+          unquote(block)
+        end
+      end
+
+      Ecto.Schema.embeds_one(unquote(name), unquote(schema))
+    end
+  end
+
   @doc false
   @spec trim_fields(map(), [atom()]) :: map()
   def trim_fields(params, trim_fields) do
@@ -310,6 +343,12 @@ defmodule EctoCommand do
     |> Pipeline.chain(:after_execution, Enum.reverse(pipeline.middlewares))
     |> Pipeline.chain(:after_failure, Enum.reverse(pipeline.middlewares))
     |> Pipeline.response()
+  end
+
+  def cast_embedded_fields(changeset, embedded_fields) do
+    Enum.reduce(embedded_fields, changeset, fn embedded_field, changeset ->
+      Ecto.Changeset.cast_embed(changeset, embedded_field)
+    end)
   end
 
   defp instantiate_command(%Pipeline{handler: handler, params: params, metadata: metadata} = pipeline) do
