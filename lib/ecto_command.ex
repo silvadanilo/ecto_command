@@ -1,3 +1,5 @@
+# credo:disable-for-this-file Credo.Check.Refactor.Nesting
+# credo:disable-for-this-file Credo.Check.Refactor.CyclomaticComplexity
 defmodule EctoCommand do
   @moduledoc """
   The `EctoCommand` module provides a DSL for defining command schemas.
@@ -103,7 +105,8 @@ defmodule EctoCommand do
         |> apply_action(:insert)
       end
 
-      # The changeset/2 function creates a new changeset with the given params and validates it against the given schema.
+      # The changeset/2 function creates a new changeset with the given params
+      # and validates it against the given schema.
       # It also fills the internal fields with the given metadata.
       # ## Examples
       #    changeset(%{name: "John", age: 28})

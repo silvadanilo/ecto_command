@@ -1,3 +1,4 @@
+# credo:disable-for-this-file Credo.Check.Refactor.Nesting
 defmodule EctoCommand.OpenApi do
   @moduledoc false
 
@@ -14,7 +15,7 @@ defmodule EctoCommand.OpenApi do
   @doc false
   defmacro __before_compile__(_env) do
     quote unquote: false do
-      def schema() do
+      def schema do
         {properties, required} =
           Enum.reduce(@command_fields, {%{}, []}, fn field, {fields, required} ->
             {name, type, opts} = field

@@ -1,4 +1,6 @@
 defmodule EctoCommand.Test.CommandCase do
+  @moduledoc false
+
   defmacro __using__(_) do
     quote do
       import EctoCommand.Test.CommandCase

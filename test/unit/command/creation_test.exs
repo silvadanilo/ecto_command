@@ -78,6 +78,7 @@ defmodule Unit.EctoCommand.CreationTest do
 
     test "an already existing module could be embedded" do
       embedded_module = String.to_atom("Sample#{:rand.uniform(999_999)}")
+
       define_a_module_with_fields embedded_module do
         param :street, :string, required: true, length: [min: 10]
         param :city, :string, required: true
@@ -85,6 +86,7 @@ defmodule Unit.EctoCommand.CreationTest do
       end
 
       module_name = String.to_atom("Sample#{:rand.uniform(999_999)}")
+
       define_a_module_with_fields module_name do
         embeds_one :address, embedded_module
       end

@@ -60,9 +60,11 @@ defmodule EctoCommand.MixProject do
       # dev
       {:ex_doc, "~> 0.27", only: :dev, runtime: false},
       {:makeup_html, ">= 0.0.0", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.3", only: [:dev], runtime: false},
 
       # test
-      {:excoveralls, "~> 0.15.3", only: [:dev, :test]}
+      {:excoveralls, "~> 0.15.3", only: [:dev, :test]},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
   end
 end

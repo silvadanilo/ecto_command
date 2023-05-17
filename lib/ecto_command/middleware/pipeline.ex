@@ -43,6 +43,18 @@ defmodule EctoCommand.Middleware.Pipeline do
 
   alias EctoCommand.Middleware.Pipeline
 
+  @type t :: %__MODULE__{
+          handler: atom(),
+          command: struct() | nil,
+          params: map(),
+          metadata: map(),
+          middlewares: [tuple()],
+          response: any() | nil,
+          error: any() | nil,
+          assigns: map(),
+          halted: boolean()
+        }
+
   @doc """
   Set the `key` with value
 
