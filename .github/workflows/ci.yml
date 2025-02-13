@@ -3,7 +3,7 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: CI
+name: Elixir CI
 
 on:
   push:
@@ -20,22 +20,27 @@ jobs:
     name: Build and test
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        elixir: [ '1.18' ]
+        otp: [ '27.2' ]
+
     steps:
     - uses: actions/checkout@v3
+    
     - name: Set up Elixir
-      uses: erlef/setup-beam@988e02bfe678367a02564f65ca2e37726dc0268f
+      uses: actions/setup-elixir@v1
       with:
-        elixir-version: '1.14.3' # Define the elixir version [required]
-        otp-version: '25.1' # Define the OTP version [required]
-      env:
-        ImageOS: ubuntu-24.04
-        
-    - name: Restore dependencies cache
+        elixir-version: ${{ matrix.elixir }}
+        otp-version: ${{ matrix.otp }}
+      
+    - name: Cache dependencies
       uses: actions/cache@v3
       with:
         path: deps
         key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
-        restore-keys: ${{ runner.os }}-mix-
+        restore-keys: |
+          ${{ runner.os }}-mix-
         
     - name: Install dependencies
       run: mix deps.get
