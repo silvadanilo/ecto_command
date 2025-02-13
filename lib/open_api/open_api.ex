@@ -96,6 +96,10 @@ defmodule EctoCommand.OpenApi do
     end)
   end
 
+  def schema_for({:default, value}, acc) do
+    Map.put(acc, :default, value)
+  end
+
   def schema_for({:doc, options}, acc) do
     Map.merge(acc, Enum.into(options, %{}))
   end

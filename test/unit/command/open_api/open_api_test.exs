@@ -27,7 +27,7 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
       param :an_integer_b, :integer, number: [not_equal_to: 20]
       param :an_integer_c, :integer, number: [greater_than: 18, less_than_or_equal_to: 100]
       param :type_id, :string
-      param :accepts, :boolean, doc: Type.boolean()
+      param :accepts, :boolean, default: false, doc: Type.boolean()
       param :folder_id, :string, change: &String.valid?/1
       param :uploaded_at, :utc_datetime, doc: Type.datetime()
 
@@ -38,7 +38,7 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
 
   test "all properties docs are generated correctly" do
     assert %{
-             accepts: %OpenApiSpex.Schema{example: true, type: :boolean},
+             accepts: %OpenApiSpex.Schema{example: true, type: :boolean, default: false},
              an_integer_a: %OpenApiSpex.Schema{
                exclusiveMaximum: false,
                exclusiveMinimum: false,
