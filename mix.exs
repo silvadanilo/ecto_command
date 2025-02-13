@@ -54,13 +54,13 @@ defmodule EctoCommand.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ecto_sql, "~> 3.6"},
-      {:open_api_spex, "~> 3.16"},
+      {:ecto_sql, "~> 3.12"},
+      {:open_api_spex, "~> 3.21"},
 
       # dev
-      {:ex_doc, "~> 0.27", only: :dev, runtime: false},
-      {:makeup_html, ">= 0.0.0", only: :dev, runtime: false},
-      {:dialyxir, "~> 1.3", only: [:dev], runtime: false},
+      {:ex_doc, "~> 0.37", only: :dev, runtime: false},
+      {:makeup_html, ">= 0.2.0", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev], runtime: false},
 
       # test
       {:excoveralls, "~> 0.15.3", only: [:dev, :test]},

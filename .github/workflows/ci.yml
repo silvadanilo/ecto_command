@@ -22,14 +22,14 @@ jobs:
 
     strategy:
       matrix:
-        elixir: [ '1.18' ]
+        elixir: [ '1.18.1' ]
         otp: [ '27.2' ]
 
     steps:
     - uses: actions/checkout@v3
     
     - name: Set up Elixir
-      uses: actions/setup-elixir@v2
+      uses: erlef/setup-beam@v1
       with:
         elixir-version: ${{ matrix.elixir }}
         otp-version: ${{ matrix.otp }}
