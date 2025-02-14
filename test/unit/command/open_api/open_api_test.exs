@@ -25,11 +25,16 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
       param :count, :integer, required: true, number: [greater_than_or_equal_to: 18, less_than: 100]
       param :an_integer_a, :integer, number: [equal_to: 20]
       param :an_integer_b, :integer, number: [not_equal_to: 20]
-      param :an_integer_c, :integer, number: [greater_than: 18, less_than_or_equal_to: 100]
+      param :an_integer_c, :integer, number: [greater_than: 18, less_than_or_equal_to: 100], doc: [example: 30]
+      param :a_float, :float, number: [greater_than: 10, less_than_or_equal_to: 100]
       param :type_id, :string
       param :accepts, :boolean, default: false, doc: Type.boolean()
       param :folder_id, :string, change: &String.valid?/1
       param :uploaded_at, :utc_datetime, doc: Type.datetime()
+      param :a_date, :date, doc: Type.date()
+      param :an_enum, Ecto.Enum, values: [:a, :b]
+      param :a_list_of_strings, {:array, :string}, subset: ["a", "b", "c"], doc: [description: "A list of strings"]
+      param :a_list_of_enums, {:array, Ecto.Enum}, values: [:a, :b, :c], doc: [description: "A list of enums"]
 
       internal :triggered_by, :map
       internal :uploaded_by, :string
@@ -44,28 +49,33 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
                exclusiveMinimum: false,
                maximum: 20,
                minimum: 20,
-               type: :integer
+               type: :integer,
+               example: 20
              },
-             an_integer_b: %OpenApiSpex.Schema{
-               exclusiveMaximum: true,
-               exclusiveMinimum: true,
-               maximum: 20,
-               minimum: 20,
-               type: :integer
-             },
+             an_integer_b: %OpenApiSpex.Schema{type: :integer, not: %{enum: [20]}, example: 21},
              an_integer_c: %OpenApiSpex.Schema{
                exclusiveMaximum: false,
                exclusiveMinimum: true,
                maximum: 100,
                minimum: 18,
-               type: :integer
+               type: :integer,
+               example: 30
+             },
+             a_float: %OpenApiSpex.Schema{
+               exclusiveMaximum: false,
+               exclusiveMinimum: true,
+               maximum: 100,
+               minimum: 10,
+               type: :number,
+               example: 55.5
              },
              count: %OpenApiSpex.Schema{
                exclusiveMaximum: true,
                exclusiveMinimum: false,
                maximum: 100,
                minimum: 18,
-               type: :integer
+               type: :integer,
+               example: 58
              },
              email: %OpenApiSpex.Schema{
                description: "Email",
@@ -96,8 +106,22 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
              uploaded_at: %OpenApiSpex.Schema{
                example: "2023-04-03T10:21:00Z",
                format: :"date-time",
-               type: :utc_datetime
-             }
+               type: :string
+             },
+             a_date: %OpenApiSpex.Schema{type: :string, format: :date, example: "2023-04-03"},
+             a_list_of_enums: %OpenApiSpex.Schema{
+               type: :array,
+               items: [%OpenApiSpex.Schema{enum: ["a", "b", "c"], type: :string, example: "a"}],
+               example: ["a", "b"],
+               description: "A list of enums"
+             },
+             a_list_of_strings: %OpenApiSpex.Schema{
+               type: :array,
+               items: [%OpenApiSpex.Schema{enum: ["a", "b", "c"], type: :string, example: "a"}],
+               example: ["a", "b"],
+               description: "A list of strings"
+             },
+             an_enum: %OpenApiSpex.Schema{enum: ["a", "b"], type: :string, example: "a"}
            } == Sample.schema().properties
   end
 
@@ -105,7 +129,7 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
     assert [:name, :email, :mime_type, :count] == Sample.schema().required
   end
 
-  test "title and type are correctly set thanks tu the use options" do
+  test "title and type are correctly set thanks to the use options" do
     assert %OpenApiSpex.Schema{title: "Sample", type: :object} = Sample.schema()
   end
 

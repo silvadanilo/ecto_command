@@ -13,6 +13,10 @@ defmodule EctoCommand.OpenApi.Type do
     [format: :"date-time", example: "2023-04-03T10:21:00Z"] ++ options
   end
 
+  def date(options \\ []) do
+    [format: :date, example: "2023-04-03"] ++ options
+  end
+
   def boolean(options \\ []) do
     [example: true] ++ options
   end
