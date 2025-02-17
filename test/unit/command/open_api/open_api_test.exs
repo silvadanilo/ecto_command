@@ -22,6 +22,8 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
         inclusion: ["image/jpeg", "image/png"],
         doc: Type.enum(["image/jpeg", "image/png"])
 
+      param :an_enum, Ecto.Enum, values: [:a, :b]
+
       param :count, :integer, required: true, number: [greater_than_or_equal_to: 18, less_than: 100]
       param :an_integer_a, :integer, number: [equal_to: 20]
       param :an_integer_b, :integer, number: [not_equal_to: 20]
@@ -31,9 +33,9 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
       param :accepts, :boolean, default: false, doc: Type.boolean()
       param :folder_id, :string, change: &String.valid?/1
       param :uploaded_at, :utc_datetime, doc: Type.datetime()
-      param :a_date, :date, doc: Type.date()
-      param :an_enum, Ecto.Enum, values: [:a, :b]
-      param :a_list_of_strings, {:array, :string}, subset: ["a", "b", "c"], doc: [description: "A list of strings"]
+      param :a_date, :date
+      param :a_list_of_strings_a, {:array, :string}, doc: [description: "A list of strings A"]
+      param :a_list_of_strings_b, {:array, :string}, subset: ["a", "b", "c"], doc: [description: "A list of strings B"]
       param :a_list_of_enums, {:array, Ecto.Enum}, values: [:a, :b, :c], doc: [description: "A list of enums"]
 
       internal :triggered_by, :map
@@ -115,11 +117,16 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
                example: ["a", "b"],
                description: "A list of enums"
              },
-             a_list_of_strings: %OpenApiSpex.Schema{
+             a_list_of_strings_a: %OpenApiSpex.Schema{
+               type: :array,
+               items: [%OpenApiSpex.Schema{type: :string}],
+               description: "A list of strings A"
+             },
+             a_list_of_strings_b: %OpenApiSpex.Schema{
                type: :array,
                items: [%OpenApiSpex.Schema{enum: ["a", "b", "c"], type: :string, example: "a"}],
                example: ["a", "b"],
-               description: "A list of strings"
+               description: "A list of strings B"
              },
              an_enum: %OpenApiSpex.Schema{enum: ["a", "b"], type: :string, example: "a"}
            } == Sample.schema().properties

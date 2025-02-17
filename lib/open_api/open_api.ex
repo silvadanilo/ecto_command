@@ -2,6 +2,8 @@
 defmodule EctoCommand.OpenApi do
   @moduledoc false
 
+  alias EctoCommand.OpenApi.Type
+
   @doc false
   defmacro __using__(opts \\ []) do
     quote bind_quoted: [opts: opts, module: __MODULE__] do
@@ -41,21 +43,16 @@ defmodule EctoCommand.OpenApi do
 
   def schema_for(type, opts) do
     opts
-    |> Enum.reduce(%{type: parse_ecto_type(type)}, &schema_for(&1, &2, opts))
-    |> add_example()
+    |> Enum.reduce(base_schema(type), &schema_for(&1, &2, opts))
     |> then(&struct!(OpenApiSpex.Schema, &1))
+    |> add_example()
   end
 
   defp schema_for(_opt, %{type: {:array, type}} = acc, opts) do
     acc
     |> Map.put(:type, :array)
-    |> Map.put(:items, [
-      opts
-      |> Keyword.update(:doc, [], &Keyword.drop(&1, [:description, :example]))
-      |> Enum.reduce(%{type: parse_ecto_type(type)}, &schema_for(&1, &2, opts))
-      |> add_example()
-      |> then(&struct!(OpenApiSpex.Schema, &1))
-    ])
+    |> Map.put(:items, [schema_for(type, Keyword.delete(opts, :doc))])
+    |> Map.merge(Map.new(opts[:doc] || []))
   end
 
   defp schema_for({:change, _options}, acc, _opts), do: acc
@@ -131,44 +128,18 @@ defmodule EctoCommand.OpenApi do
 
   defp schema_for({:required, _}, acc, _opts), do: acc
 
-  defp parse_ecto_type(:binary_id), do: :string
-  defp parse_ecto_type(:date), do: :string
-  defp parse_ecto_type(:utc_datetime), do: :string
-  defp parse_ecto_type(:naive_datetime), do: :string
-  defp parse_ecto_type(:time), do: :string
-  defp parse_ecto_type(:utc_datetime_usec), do: :string
-  defp parse_ecto_type(:naive_datetime_usec), do: :string
-  defp parse_ecto_type(Ecto.Enum), do: :string
-  defp parse_ecto_type(:float), do: :number
-  defp parse_ecto_type(:decimal), do: :number
-  defp parse_ecto_type(value), do: value
+  defp base_schema(:binary_id), do: %{type: :string}
+  defp base_schema(:date), do: %{type: :string, format: :date}
+  defp base_schema(:utc_datetime), do: %{type: :string, format: :"date-time"}
+  defp base_schema(:utc_datetime_usec), do: %{type: :string, format: :"date-time"}
+  defp base_schema(:naive_datetime), do: %{type: :string, format: :"date-time"}
+  defp base_schema(:naive_datetime_usec), do: %{type: :string, format: :"date-time"}
+  defp base_schema(:time), do: %{type: :string}
+  defp base_schema(Ecto.Enum), do: %{type: :string}
+  defp base_schema(:float), do: %{type: :number}
+  defp base_schema(:decimal), do: %{type: :number}
+  defp base_schema(value), do: %{type: value}
 
-  defp add_example(%{example: _} = schema), do: schema
-
-  defp add_example(%{type: :array, items: [%{enum: values}]} = schema),
-    do: Map.put(schema, :example, Enum.take(values, 2))
-
-  defp add_example(%{enum: values} = schema),
-    do: Map.put(schema, :example, List.first(values))
-
-  defp add_example(%{type: :integer} = schema),
-    do: Map.put(schema, :example, trunc(number_example(schema)))
-
-  defp add_example(%{type: :number} = schema),
-    do: Map.put(schema, :example, number_example(schema))
-
-  defp add_example(schema), do: schema
-
-  defp number_example(%{not: %{enum: [n]}}), do: (n + 1) / 1
-
-  defp number_example(%{} = schema) do
-    min = if schema[:minimum], do: schema[:minimum] + ((schema[:exclusiveMinimum] && 1) || 0)
-    max = if schema[:maximum], do: schema[:maximum] - ((schema[:exclusiveMaximum] && 1) || 0)
-    pick_number_example(min, max)
-  end
-
-  defp pick_number_example(nil, nil), do: 10.0
-  defp pick_number_example(min, nil), do: min
-  defp pick_number_example(nil, max), do: max
-  defp pick_number_example(min, max), do: min + (max - min) / 2
+  defp add_example(%{example: example} = schema) when not is_nil(example), do: schema
+  defp add_example(schema), do: Map.put(schema, :example, Type.example_for(schema))
 end
