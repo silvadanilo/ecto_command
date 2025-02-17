@@ -43,24 +43,18 @@ defmodule EctoCommand.OpenApi do
 
   def schema_for(type, opts) do
     opts
-    |> Enum.reduce(base_schema(type), &schema_for(&1, &2, opts))
+    |> Enum.reduce(base_schema(type, opts), &schema_for_option/2)
     |> then(&struct!(OpenApiSpex.Schema, &1))
     |> add_example()
   end
 
-  defp schema_for(_opt, %{type: {:array, type}} = acc, opts) do
-    acc
-    |> Map.put(:type, :array)
-    |> Map.put(:items, [schema_for(type, Keyword.delete(opts, :doc))])
-    |> Map.merge(Map.new(opts[:doc] || []))
-  end
+  defp schema_for_option({k, _}, %{type: :array} = acc) when k != :doc, do: acc
+  defp schema_for_option({:change, _options}, acc), do: acc
+  defp schema_for_option({:inclusion, values}, acc), do: Map.put(acc, :enum, values)
+  defp schema_for_option({:subset, values}, acc), do: Map.put(acc, :enum, values)
+  defp schema_for_option({:format, format}, acc), do: Map.put(acc, :pattern, format)
 
-  defp schema_for({:change, _options}, acc, _opts), do: acc
-  defp schema_for({:inclusion, values}, acc, _opts), do: Map.put(acc, :enum, values)
-  defp schema_for({:subset, values}, acc, _opts), do: Map.put(acc, :enum, values)
-  defp schema_for({:format, format}, acc, _opts), do: Map.put(acc, :pattern, format)
-
-  defp schema_for({:length, options}, acc, _opts) do
+  defp schema_for_option({:length, options}, acc) do
     Enum.reduce(options, acc, fn
       {:min, min}, acc ->
         Map.put(acc, :minLength, min)
@@ -74,7 +68,7 @@ defmodule EctoCommand.OpenApi do
     end)
   end
 
-  defp schema_for({:number, options}, acc, _opts) do
+  defp schema_for_option({:number, options}, acc) do
     Enum.reduce(options, acc, fn
       {:less_than, value}, acc ->
         acc
@@ -108,7 +102,7 @@ defmodule EctoCommand.OpenApi do
     end)
   end
 
-  defp schema_for({:values, values}, acc, _opts) do
+  defp schema_for_option({:values, values}, acc) do
     parsed_values =
       Enum.map(values, fn
         value when is_atom(value) -> Atom.to_string(value)
@@ -118,15 +112,21 @@ defmodule EctoCommand.OpenApi do
     Map.put(acc, :enum, parsed_values)
   end
 
-  defp schema_for({:default, value}, acc, _opts) do
+  defp schema_for_option({:default, value}, acc) do
     Map.put(acc, :default, value)
   end
 
-  defp schema_for({:doc, options}, acc, _opts) do
+  defp schema_for_option({:doc, options}, acc) do
     Map.merge(acc, Enum.into(options, %{}))
   end
 
-  defp schema_for({:required, _}, acc, _opts), do: acc
+  defp schema_for_option({:required, _}, acc), do: acc
+
+  defp base_schema({:array, type}, opts) do
+    %{type: :array, items: [schema_for(type, Keyword.delete(opts, :doc))]}
+  end
+
+  defp base_schema(type, _opts), do: base_schema(type)
 
   defp base_schema(:binary_id), do: %{type: :string}
   defp base_schema(:date), do: %{type: :string, format: :date}
@@ -138,6 +138,7 @@ defmodule EctoCommand.OpenApi do
   defp base_schema(Ecto.Enum), do: %{type: :string}
   defp base_schema(:float), do: %{type: :number}
   defp base_schema(:decimal), do: %{type: :number}
+
   defp base_schema(value), do: %{type: value}
 
   defp add_example(%{example: example} = schema) when not is_nil(example), do: schema

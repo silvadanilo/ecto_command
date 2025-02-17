@@ -34,8 +34,9 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
       param :folder_id, :string, change: &String.valid?/1
       param :uploaded_at, :utc_datetime, doc: Type.datetime()
       param :a_date, :date
-      param :a_list_of_strings_a, {:array, :string}, doc: [description: "A list of strings A"]
-      param :a_list_of_strings_b, {:array, :string}, subset: ["a", "b", "c"], doc: [description: "A list of strings B"]
+      param :a_list_of_strings_a, {:array, :string}
+      param :a_list_of_strings_b, {:array, :string}, doc: [description: "A list of strings A"]
+      param :a_list_of_strings_c, {:array, :string}, subset: ["a", "b", "c"], doc: [description: "A list of strings B"]
       param :a_list_of_enums, {:array, Ecto.Enum}, values: [:a, :b, :c], doc: [description: "A list of enums"]
 
       internal :triggered_by, :map
@@ -119,10 +120,14 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
              },
              a_list_of_strings_a: %OpenApiSpex.Schema{
                type: :array,
+               items: [%OpenApiSpex.Schema{type: :string}]
+             },
+             a_list_of_strings_b: %OpenApiSpex.Schema{
+               type: :array,
                items: [%OpenApiSpex.Schema{type: :string}],
                description: "A list of strings A"
              },
-             a_list_of_strings_b: %OpenApiSpex.Schema{
+             a_list_of_strings_c: %OpenApiSpex.Schema{
                type: :array,
                items: [%OpenApiSpex.Schema{enum: ["a", "b", "c"], type: :string, example: "a"}],
                example: ["a", "b"],
