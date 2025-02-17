@@ -31,12 +31,12 @@ defmodule EctoCommand.OpenApi do
             end
           end)
 
-        %OpenApiSpex.Schema{
+        EctoCommand.OpenApi.add_example(%OpenApiSpex.Schema{
           title: @ecto_command_openapi_options[:title] || __MODULE__,
           type: @ecto_command_openapi_options[:type] || :object,
           properties: properties,
           required: required
-        }
+        })
       end
     end
   end
@@ -48,7 +48,10 @@ defmodule EctoCommand.OpenApi do
     |> add_example()
   end
 
-  defp schema_for_option({k, _}, %{type: :array} = acc) when k != :doc, do: acc
+  def add_example(%{example: example} = schema) when not is_nil(example), do: schema
+  def add_example(schema), do: Map.put(schema, :example, Type.example_for(schema))
+
+  defp schema_for_option({k, _}, %{type: :array} = acc) when k not in [:doc, :default], do: acc
   defp schema_for_option({:change, _options}, acc), do: acc
   defp schema_for_option({:inclusion, values}, acc), do: Map.put(acc, :enum, values)
   defp schema_for_option({:subset, values}, acc), do: Map.put(acc, :enum, values)
@@ -123,7 +126,7 @@ defmodule EctoCommand.OpenApi do
   defp schema_for_option({:required, _}, acc), do: acc
 
   defp base_schema({:array, type}, opts) do
-    %{type: :array, items: [schema_for(type, Keyword.delete(opts, :doc))]}
+    %{type: :array, items: [schema_for(type, Keyword.drop(opts, [:doc, :default]))]}
   end
 
   defp base_schema(type, _opts), do: base_schema(type)
@@ -140,7 +143,4 @@ defmodule EctoCommand.OpenApi do
   defp base_schema(:decimal), do: %{type: :number}
 
   defp base_schema(value), do: %{type: value}
-
-  defp add_example(%{example: example} = schema) when not is_nil(example), do: schema
-  defp add_example(schema), do: Map.put(schema, :example, Type.example_for(schema))
 end

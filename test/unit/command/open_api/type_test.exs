@@ -124,6 +124,31 @@ defmodule Unit.EctoCommand.OpenApi.TypeTest do
     test "for datetimes" do
       assert "2023-04-03T10:21:00Z" == Type.example_for(%Schema{type: :string, format: :"date-time"})
     end
+
+    test "for object" do
+      schema = %OpenApiSpex.Schema{
+        type: :object,
+        properties: %{
+          active: %OpenApiSpex.Schema{type: :boolean, default: true, example: true},
+          count: %OpenApiSpex.Schema{minimum: 10, exclusiveMinimum: true, type: :integer, example: 11},
+          id: %OpenApiSpex.Schema{type: :string},
+          name: %OpenApiSpex.Schema{type: :string},
+          type: %OpenApiSpex.Schema{enum: ["a", "b"], type: :string, example: "a"},
+          tags: %OpenApiSpex.Schema{type: :array, items: [%OpenApiSpex.Schema{type: :string, default: []}]},
+          non_required_id: %OpenApiSpex.Schema{type: :string}
+        }
+      }
+
+      assert %{
+               active: true,
+               count: 11,
+               id: "string",
+               name: "string",
+               type: "a",
+               tags: [],
+               non_required_id: "string"
+             } == Type.example_for(schema)
+    end
   end
 
   test "example_for/1 returns nil in all other cases" do

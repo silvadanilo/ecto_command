@@ -34,12 +34,23 @@ defmodule EctoCommand.OpenApi.Type do
   def example_for(%Schema{type: :array, items: [%{enum: values}]} = _schema) when is_list(values),
     do: Enum.take(values, 2)
 
-  def example_for(%Schema{enum: values} = _schema) when is_list(values), do: List.first(values)
+  def example_for(%Schema{default: default}) when not is_nil(default), do: default
+  def example_for(%Schema{enum: values}) when is_list(values), do: List.first(values)
+  def example_for(%Schema{type: :string, format: :date}), do: "2023-04-03"
+  def example_for(%Schema{type: :string, format: :"date-time"}), do: "2023-04-03T10:21:00Z"
+  def example_for(%Schema{type: :string}), do: "string"
+  def example_for(%Schema{type: :boolean}), do: true
   def example_for(%Schema{type: :integer} = schema), do: trunc(number_example(schema))
   def example_for(%Schema{type: :number} = schema), do: number_example(schema)
-  def example_for(%Schema{type: :boolean} = _schema), do: true
-  def example_for(%Schema{type: :string, format: :date} = _schema), do: "2023-04-03"
-  def example_for(%Schema{type: :string, format: :"date-time"} = _schema), do: "2023-04-03T10:21:00Z"
+  def example_for(%Schema{type: :array, items: [%{example: nil}]}), do: []
+  def example_for(%Schema{type: :array, items: [%{example: example}]}), do: [example]
+
+  def example_for(%Schema{type: :object, properties: properties}) do
+    Map.new(properties, fn {name, %Schema{example: example} = schema} ->
+      {name, example || example_for(schema)}
+    end)
+  end
+
   def example_for(_schema), do: nil
 
   defp number_example(%Schema{not: %{enum: [n]}}), do: (n + 1) / 1
