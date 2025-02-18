@@ -109,7 +109,7 @@ defmodule EctoCommand.OpenApi do
     parsed_values =
       Enum.map(values, fn
         value when is_atom(value) -> Atom.to_string(value)
-        value -> value
+        {value, _mapped_ind} -> Atom.to_string(value)
       end)
 
     Map.put(acc, :enum, parsed_values)

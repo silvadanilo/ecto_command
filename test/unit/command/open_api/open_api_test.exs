@@ -12,6 +12,7 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
 
     command do
       param :id, :string, doc: Type.uuid()
+      param :numeric_id, :id
       param :name, :string, required: true, length: [min: 2, max: 255], doc: [example: "Mario"]
       param :email, :string, required: true, format: ~r/@/, length: [min: 6], doc: Type.email()
       param :phone, :string, length: [min: 9], doc: Type.phone()
@@ -23,6 +24,7 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
         doc: Type.enum(["image/jpeg", "image/png"])
 
       param :an_enum, Ecto.Enum, values: [:a, :b]
+      param :an_enum_stored_as_int, Ecto.Enum, values: [a: 1, b: 2]
 
       param :count, :integer, required: true, number: [greater_than_or_equal_to: 18, less_than: 100]
       param :an_integer_a, :integer, number: [equal_to: 20]
@@ -98,6 +100,7 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
                format: :uuid,
                type: :string
              },
+             numeric_id: %OpenApiSpex.Schema{example: 10, type: :integer},
              mime_type: %OpenApiSpex.Schema{enum: ["image/jpeg", "image/png"], example: "image/jpeg", type: :string},
              name: %OpenApiSpex.Schema{example: "Mario", maxLength: 255, minLength: 2, type: :string},
              phone: %OpenApiSpex.Schema{
@@ -139,6 +142,7 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
                description: "A list of strings B"
              },
              an_enum: %OpenApiSpex.Schema{enum: ["a", "b"], type: :string, example: "a"},
+             an_enum_stored_as_int: %OpenApiSpex.Schema{enum: ["a", "b"], type: :string, example: "a"},
              a_map: %OpenApiSpex.Schema{
                type: :object,
                properties: %{},
@@ -168,6 +172,7 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
              a_map_with_int_values: %{a: 1},
              accepts: true,
              an_enum: "a",
+             an_enum_stored_as_int: "a",
              an_integer_a: 20,
              an_integer_b: 21,
              an_integer_c: 30,
@@ -176,6 +181,7 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
              extension: "png",
              folder_id: "string",
              id: "defa2814-3686-4a73-9f64-a17cdfd7f1a1",
+             numeric_id: 10,
              mime_type: "image/jpeg",
              name: "Mario",
              phone: "(425) 123-4567",
