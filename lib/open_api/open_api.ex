@@ -43,7 +43,7 @@ defmodule EctoCommand.OpenApi do
 
   def schema_for(type, opts) do
     opts
-    |> Enum.reduce(base_schema(type, opts), &schema_for_option/2)
+    |> Enum.reduce(base_schema(type, opts), &parse_option/2)
     |> then(&struct!(OpenApiSpex.Schema, &1))
     |> add_example()
   end
@@ -51,13 +51,13 @@ defmodule EctoCommand.OpenApi do
   def add_example(%{example: example} = schema) when not is_nil(example), do: schema
   def add_example(schema), do: Map.put(schema, :example, Type.example_for(schema))
 
-  defp schema_for_option({k, _}, %{type: :array} = acc) when k not in [:doc, :default], do: acc
-  defp schema_for_option({:change, _options}, acc), do: acc
-  defp schema_for_option({:inclusion, values}, acc), do: Map.put(acc, :enum, values)
-  defp schema_for_option({:subset, values}, acc), do: Map.put(acc, :enum, values)
-  defp schema_for_option({:format, format}, acc), do: Map.put(acc, :pattern, format)
+  defp parse_option({key, _}, %{type: :array} = acc) when key not in [:doc, :default], do: acc
+  defp parse_option({:change, _options}, acc), do: acc
+  defp parse_option({:inclusion, values}, acc), do: Map.put(acc, :enum, values)
+  defp parse_option({:subset, values}, acc), do: Map.put(acc, :enum, values)
+  defp parse_option({:format, format}, acc), do: Map.put(acc, :pattern, format)
 
-  defp schema_for_option({:length, options}, acc) do
+  defp parse_option({:length, options}, acc) do
     Enum.reduce(options, acc, fn
       {:min, min}, acc ->
         Map.put(acc, :minLength, min)
@@ -71,7 +71,7 @@ defmodule EctoCommand.OpenApi do
     end)
   end
 
-  defp schema_for_option({:number, options}, acc) do
+  defp parse_option({:number, options}, acc) do
     Enum.reduce(options, acc, fn
       {:less_than, value}, acc ->
         acc
@@ -105,7 +105,7 @@ defmodule EctoCommand.OpenApi do
     end)
   end
 
-  defp schema_for_option({:values, values}, acc) do
+  defp parse_option({:values, values}, acc) do
     parsed_values =
       Enum.map(values, fn
         value when is_atom(value) -> Atom.to_string(value)
@@ -115,32 +115,33 @@ defmodule EctoCommand.OpenApi do
     Map.put(acc, :enum, parsed_values)
   end
 
-  defp schema_for_option({:default, value}, acc) do
+  defp parse_option({:default, value}, acc) do
     Map.put(acc, :default, value)
   end
 
-  defp schema_for_option({:doc, options}, acc) do
+  defp parse_option({:doc, options}, acc) do
     Map.merge(acc, Enum.into(options, %{}))
   end
 
-  defp schema_for_option({:required, _}, acc), do: acc
+  defp parse_option({:required, _}, acc), do: acc
 
-  defp base_schema({:array, type}, opts) do
-    %{type: :array, items: [schema_for(type, Keyword.drop(opts, [:doc, :default]))]}
+  defp base_schema({:array, inner_type}, opts) do
+    %{type: :array, items: [schema_for(inner_type, Keyword.drop(opts, [:doc, :default]))]}
   end
 
   defp base_schema(type, _opts), do: base_schema(type)
 
-  defp base_schema(:binary_id), do: %{type: :string}
+  defp base_schema(:id), do: %{type: :integer}
+  defp base_schema(type) when type in [:float, :decimal], do: %{type: :number}
+  defp base_schema(:map), do: %{type: :object, properties: %{}}
+  defp base_schema({:map, _inner_type}), do: %{type: :object, properties: %{}}
   defp base_schema(:date), do: %{type: :string, format: :date}
-  defp base_schema(:utc_datetime), do: %{type: :string, format: :"date-time"}
-  defp base_schema(:utc_datetime_usec), do: %{type: :string, format: :"date-time"}
-  defp base_schema(:naive_datetime), do: %{type: :string, format: :"date-time"}
-  defp base_schema(:naive_datetime_usec), do: %{type: :string, format: :"date-time"}
-  defp base_schema(:time), do: %{type: :string}
-  defp base_schema(Ecto.Enum), do: %{type: :string}
-  defp base_schema(:float), do: %{type: :number}
-  defp base_schema(:decimal), do: %{type: :number}
 
-  defp base_schema(value), do: %{type: value}
+  defp base_schema(type) when type in [:utc_datetime, :utc_datetime_usec, :naive_datetime, :naive_datetime_usec],
+    do: %{type: :string, format: :"date-time"}
+
+  defp base_schema(type) when type in [:binary_id, :bitstring, :time, :time_usec, Ecto.Enum, :duration],
+    do: %{type: :string}
+
+  defp base_schema(type), do: %{type: type}
 end

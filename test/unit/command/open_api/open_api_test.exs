@@ -38,6 +38,8 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
       param :a_list_of_strings_b, {:array, :string}, doc: [description: "A list of strings A"]
       param :a_list_of_strings_c, {:array, :string}, subset: ["a", "b", "c"], doc: [description: "A list of strings B"]
       param :a_list_of_enums, {:array, Ecto.Enum}, values: [:a, :b, :c], doc: [description: "A list of enums"]
+      param :a_map, :map, doc: [description: "A map"], default: %{}
+      param :a_map_with_int_values, {:map, :integer}, doc: [description: "A map with integer values"], default: %{a: 1}
 
       internal :triggered_by, :map
       internal :uploaded_by, :string
@@ -136,7 +138,21 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
                example: ["a", "b"],
                description: "A list of strings B"
              },
-             an_enum: %OpenApiSpex.Schema{enum: ["a", "b"], type: :string, example: "a"}
+             an_enum: %OpenApiSpex.Schema{enum: ["a", "b"], type: :string, example: "a"},
+             a_map: %OpenApiSpex.Schema{
+               type: :object,
+               properties: %{},
+               description: "A map",
+               default: %{},
+               example: %{}
+             },
+             a_map_with_int_values: %OpenApiSpex.Schema{
+               type: :object,
+               properties: %{},
+               description: "A map with integer values",
+               default: %{a: 1},
+               example: %{a: 1}
+             }
            } == Sample.schema().properties
   end
 
@@ -148,6 +164,8 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
              a_list_of_strings_a: [],
              a_list_of_strings_b: ["string"],
              a_list_of_strings_c: ["a", "b"],
+             a_map: %{},
+             a_map_with_int_values: %{a: 1},
              accepts: true,
              an_enum: "a",
              an_integer_a: 20,
