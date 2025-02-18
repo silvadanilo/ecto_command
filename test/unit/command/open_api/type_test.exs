@@ -141,6 +141,19 @@ defmodule Unit.EctoCommand.OpenApi.TypeTest do
       assert "(425) 123-4567" == Type.example_for(%Schema{type: :string, format: :telephone})
     end
 
+    test "for arrays without inner type example and without default" do
+      assert [] == Type.example_for(%Schema{type: :array, items: [%Schema{type: :integer}]})
+    end
+
+    test "for arrays with inner type example and without default" do
+      assert [1] == Type.example_for(%Schema{type: :array, items: [%Schema{type: :integer, example: 1}]})
+    end
+
+    test "for arrays with inner type example and with default" do
+      assert [1, 2, 3] ==
+               Type.example_for(%Schema{type: :array, items: [%Schema{type: :integer, example: 1}], default: [1, 2, 3]})
+    end
+
     test "for object" do
       schema = %OpenApiSpex.Schema{
         type: :object,
