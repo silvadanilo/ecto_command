@@ -27,6 +27,10 @@ defmodule EctoCommand.OpenApi.Type do
     [format: :email, description: "Email", example: "user@domain.com"] ++ options
   end
 
+  def password(options \\ []) do
+    [format: :password, description: "Password", example: "Abcd123!!"] ++ options
+  end
+
   def phone(options \\ []) do
     [format: :telephone, description: "Telephone", example: "(425) 123-4567"] ++ options
   end
@@ -36,8 +40,12 @@ defmodule EctoCommand.OpenApi.Type do
 
   def example_for(%Schema{default: default}) when not is_nil(default), do: default
   def example_for(%Schema{enum: values}) when is_list(values), do: List.first(values)
-  def example_for(%Schema{type: :string, format: :date}), do: "2023-04-03"
-  def example_for(%Schema{type: :string, format: :"date-time"}), do: "2023-04-03T10:21:00Z"
+  def example_for(%Schema{type: :string, format: :date}), do: Keyword.get(date(), :example)
+  def example_for(%Schema{type: :string, format: :"date-time"}), do: Keyword.get(datetime(), :example)
+  def example_for(%Schema{type: :string, format: :uuid}), do: Keyword.get(uuid(), :example)
+  def example_for(%Schema{type: :string, format: :email}), do: Keyword.get(email(), :example)
+  def example_for(%Schema{type: :string, format: :telephone}), do: Keyword.get(phone(), :example)
+  def example_for(%Schema{type: :string, format: :password}), do: Keyword.get(password(), :example)
   def example_for(%Schema{type: :string}), do: "string"
   def example_for(%Schema{type: :boolean}), do: true
   def example_for(%Schema{type: :integer} = schema), do: trunc(number_example(schema))

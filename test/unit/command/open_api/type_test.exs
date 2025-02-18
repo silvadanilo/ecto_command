@@ -125,6 +125,22 @@ defmodule Unit.EctoCommand.OpenApi.TypeTest do
       assert "2023-04-03T10:21:00Z" == Type.example_for(%Schema{type: :string, format: :"date-time"})
     end
 
+    test "for UUIDs" do
+      assert "defa2814-3686-4a73-9f64-a17cdfd7f1a1" == Type.example_for(%Schema{type: :string, format: :uuid})
+    end
+
+    test "for emails" do
+      assert "user@domain.com" == Type.example_for(%Schema{type: :string, format: :email})
+    end
+
+    test "for passwords" do
+      assert "Abcd123!!" == Type.example_for(%Schema{type: :string, format: :password})
+    end
+
+    test "for telephones" do
+      assert "(425) 123-4567" == Type.example_for(%Schema{type: :string, format: :telephone})
+    end
+
     test "for object" do
       schema = %OpenApiSpex.Schema{
         type: :object,
