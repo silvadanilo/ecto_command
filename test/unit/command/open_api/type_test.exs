@@ -113,20 +113,16 @@ defmodule Unit.EctoCommand.OpenApi.TypeTest do
       assert 9.5 == Type.example_for(schema)
     end
 
-    test "for booleans" do
-      assert true == Type.example_for(%Schema{type: :boolean})
-    end
-
     test "for dates" do
-      assert "2023-04-03" == Type.example_for(%Schema{type: :string, format: :date})
+      assert "2020-04-20" == Type.example_for(%Schema{type: :string, format: :date})
     end
 
     test "for datetimes" do
-      assert "2023-04-03T10:21:00Z" == Type.example_for(%Schema{type: :string, format: :"date-time"})
+      assert "2020-04-20T16:20:00Z" == Type.example_for(%Schema{type: :string, format: :"date-time"})
     end
 
     test "for UUIDs" do
-      assert "defa2814-3686-4a73-9f64-a17cdfd7f1a1" == Type.example_for(%Schema{type: :string, format: :uuid})
+      assert "02ef9c5f-29e6-48fc-9ec3-7ed57ed351f6" == Type.example_for(%Schema{type: :string, format: :uuid})
     end
 
     test "for emails" do
@@ -163,7 +159,7 @@ defmodule Unit.EctoCommand.OpenApi.TypeTest do
           id: %OpenApiSpex.Schema{type: :string},
           name: %OpenApiSpex.Schema{type: :string},
           type: %OpenApiSpex.Schema{enum: ["a", "b"], type: :string, example: "a"},
-          tags: %OpenApiSpex.Schema{type: :array, items: [%OpenApiSpex.Schema{type: :string, default: []}]},
+          tags: %OpenApiSpex.Schema{type: :array, items: [%OpenApiSpex.Schema{type: :string}], default: []},
           non_required_id: %OpenApiSpex.Schema{type: :string}
         }
       }
@@ -171,11 +167,11 @@ defmodule Unit.EctoCommand.OpenApi.TypeTest do
       assert %{
                active: true,
                count: 11,
-               id: "string",
-               name: "string",
+               id: "",
+               name: "",
                type: "a",
                tags: [],
-               non_required_id: "string"
+               non_required_id: ""
              } == Type.example_for(schema)
     end
   end

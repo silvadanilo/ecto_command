@@ -4,23 +4,7 @@ defmodule EctoCommand.OpenApi.Type do
   alias OpenApiSpex.Schema
 
   def uuid(options \\ []) do
-    [format: :uuid, description: "UUID", example: "defa2814-3686-4a73-9f64-a17cdfd7f1a1"] ++ options
-  end
-
-  def enum(values, options \\ []) do
-    [example: List.first(values)] ++ options
-  end
-
-  def datetime(options \\ []) do
-    [format: :"date-time", example: "2023-04-03T10:21:00Z"] ++ options
-  end
-
-  def date(options \\ []) do
-    [format: :date, example: "2023-04-03"] ++ options
-  end
-
-  def boolean(options \\ []) do
-    [example: true] ++ options
+    [format: :uuid, description: "UUID"] ++ options
   end
 
   def email(options \\ []) do
@@ -35,19 +19,34 @@ defmodule EctoCommand.OpenApi.Type do
     [format: :telephone, description: "Telephone", example: "(425) 123-4567"] ++ options
   end
 
+  @deprecated "Automatically inferred from command schema when type is one of `:utc_datetime`, `:utc_datetime_usec`, `:naive_datetime`, `:naive_datetime_usec`"
+  def datetime(options \\ []) do
+    [format: :"date-time"] ++ options
+  end
+
+  @deprecated "Automatically inferred from command schema when type is `:date`"
+  def date(options \\ []) do
+    [format: :date] ++ options
+  end
+
+  @deprecated "Automatically inferred from command schema when type is `Ecto.Enum` or `inclusion` opt is used"
+  def enum(values, options \\ []) do
+    [example: List.first(values)] ++ options
+  end
+
+  @deprecated "Automatically inferred from command schema when type is `:boolean`"
+  def boolean(options \\ []) do
+    [example: true] ++ options
+  end
+
   def example_for(%Schema{type: :array, items: [%{enum: values}]} = _schema) when is_list(values),
     do: Enum.take(values, 2)
 
   def example_for(%Schema{default: default}) when not is_nil(default), do: default
   def example_for(%Schema{enum: values}) when is_list(values), do: List.first(values)
-  def example_for(%Schema{type: :string, format: :date}), do: Keyword.get(date(), :example)
-  def example_for(%Schema{type: :string, format: :"date-time"}), do: Keyword.get(datetime(), :example)
-  def example_for(%Schema{type: :string, format: :uuid}), do: Keyword.get(uuid(), :example)
   def example_for(%Schema{type: :string, format: :email}), do: Keyword.get(email(), :example)
   def example_for(%Schema{type: :string, format: :telephone}), do: Keyword.get(phone(), :example)
   def example_for(%Schema{type: :string, format: :password}), do: Keyword.get(password(), :example)
-  def example_for(%Schema{type: :string}), do: "string"
-  def example_for(%Schema{type: :boolean}), do: true
   def example_for(%Schema{type: :integer} = schema), do: trunc(number_example(schema))
   def example_for(%Schema{type: :number} = schema), do: number_example(schema)
   def example_for(%Schema{type: :array, items: [%{example: nil}]}), do: []
@@ -59,6 +58,7 @@ defmodule EctoCommand.OpenApi.Type do
     end)
   end
 
+  def example_for(%Schema{} = schema), do: Schema.example(schema)
   def example_for(_schema), do: nil
 
   defp number_example(%Schema{not: %{enum: [n]}}), do: (n + 1) / 1

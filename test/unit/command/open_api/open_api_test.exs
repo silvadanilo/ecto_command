@@ -20,8 +20,7 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
 
       param :mime_type, :string,
         required: true,
-        inclusion: ["image/jpeg", "image/png"],
-        doc: Type.enum(["image/jpeg", "image/png"])
+        inclusion: ["image/jpeg", "image/png"]
 
       param :an_enum, Ecto.Enum, values: [:a, :b]
       param :an_enum_stored_as_int, Ecto.Enum, values: [a: 1, b: 2]
@@ -32,9 +31,9 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
       param :an_integer_c, :integer, number: [greater_than: 18, less_than_or_equal_to: 100], doc: [example: 30]
       param :a_float, :float, number: [greater_than: 10, less_than_or_equal_to: 100]
       param :type_id, :string
-      param :accepts, :boolean, default: false, doc: Type.boolean()
-      param :folder_id, :string, change: &String.valid?/1
-      param :uploaded_at, :utc_datetime, doc: Type.datetime()
+      param :accepts, :boolean, default: false
+      param :folder_id, :string, change: &String.valid?/1, doc: [example: "a_folder_id"]
+      param :uploaded_at, :utc_datetime
       param :a_date, :date
       param :a_list_of_strings_a, {:array, :string}, default: []
       param :a_list_of_strings_b, {:array, :string}, doc: [description: "A list of strings A"]
@@ -50,7 +49,7 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
 
   test "all properties docs are generated correctly" do
     assert %{
-             accepts: %OpenApiSpex.Schema{example: true, type: :boolean, default: false},
+             accepts: %OpenApiSpex.Schema{example: false, type: :boolean, default: false},
              an_integer_a: %OpenApiSpex.Schema{
                exclusiveMaximum: false,
                exclusiveMinimum: false,
@@ -93,10 +92,10 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
                type: :string
              },
              extension: %OpenApiSpex.Schema{example: "png", maxLength: 3, type: :string},
-             folder_id: %OpenApiSpex.Schema{type: :string, example: "string"},
+             folder_id: %OpenApiSpex.Schema{type: :string, example: "a_folder_id"},
              id: %OpenApiSpex.Schema{
                description: "UUID",
-               example: "defa2814-3686-4a73-9f64-a17cdfd7f1a1",
+               example: "02ef9c5f-29e6-48fc-9ec3-7ed57ed351f6",
                format: :uuid,
                type: :string
              },
@@ -110,13 +109,13 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
                minLength: 9,
                type: :string
              },
-             type_id: %OpenApiSpex.Schema{type: :string, example: "string"},
+             type_id: %OpenApiSpex.Schema{type: :string, example: ""},
              uploaded_at: %OpenApiSpex.Schema{
-               example: "2023-04-03T10:21:00Z",
+               example: "2020-04-20T16:20:00Z",
                format: :"date-time",
                type: :string
              },
-             a_date: %OpenApiSpex.Schema{type: :string, format: :date, example: "2023-04-03"},
+             a_date: %OpenApiSpex.Schema{type: :string, format: :date, example: "2020-04-20"},
              a_list_of_enums: %OpenApiSpex.Schema{
                type: :array,
                items: [%OpenApiSpex.Schema{enum: ["a", "b", "c"], type: :string, example: "a"}],
@@ -125,15 +124,15 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
              },
              a_list_of_strings_a: %OpenApiSpex.Schema{
                type: :array,
-               items: [%OpenApiSpex.Schema{type: :string, example: "string"}],
+               items: [%OpenApiSpex.Schema{type: :string, example: ""}],
                default: [],
                example: []
              },
              a_list_of_strings_b: %OpenApiSpex.Schema{
                type: :array,
-               items: [%OpenApiSpex.Schema{type: :string, example: "string"}],
+               items: [%OpenApiSpex.Schema{type: :string, example: ""}],
                description: "A list of strings A",
-               example: ["string"]
+               example: [""]
              },
              a_list_of_strings_c: %OpenApiSpex.Schema{
                type: :array,
@@ -162,15 +161,15 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
 
   test "example is generated accordingly to properties" do
     assert %{
-             a_date: "2023-04-03",
+             a_date: "2020-04-20",
              a_float: 55.5,
              a_list_of_enums: ["a", "b"],
              a_list_of_strings_a: [],
-             a_list_of_strings_b: ["string"],
+             a_list_of_strings_b: [""],
              a_list_of_strings_c: ["a", "b"],
              a_map: %{},
              a_map_with_int_values: %{a: 1},
-             accepts: true,
+             accepts: false,
              an_enum: "a",
              an_enum_stored_as_int: "a",
              an_integer_a: 20,
@@ -179,14 +178,14 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
              count: 58,
              email: "user@domain.com",
              extension: "png",
-             folder_id: "string",
-             id: "defa2814-3686-4a73-9f64-a17cdfd7f1a1",
+             folder_id: "a_folder_id",
+             id: "02ef9c5f-29e6-48fc-9ec3-7ed57ed351f6",
              numeric_id: 10,
              mime_type: "image/jpeg",
              name: "Mario",
              phone: "(425) 123-4567",
-             type_id: "string",
-             uploaded_at: "2023-04-03T10:21:00Z"
+             type_id: "",
+             uploaded_at: "2020-04-20T16:20:00Z"
            } == Sample.schema().example
   end
 
