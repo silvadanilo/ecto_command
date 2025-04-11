@@ -22,7 +22,7 @@ defmodule EctoCommand.OpenApi do
           Enum.reduce(@command_fields, {%{}, []}, fn field, {fields, required} ->
             {name, type, opts} = field
 
-            if opts[:internal] != true do
+            if opts[:internal] != true and opts[:doc] != false do
               required = if Enum.member?([true, []], opts[:required]), do: [name | required], else: required
               fields = Map.put(fields, name, EctoCommand.OpenApi.schema_for(type, opts))
               {fields, required}
