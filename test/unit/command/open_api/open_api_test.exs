@@ -12,6 +12,7 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
 
     command do
       param :id, :string, doc: Type.uuid()
+      param :hidden_field, :string, required: true, inclusion: ["a", "b"], doc: false
       param :numeric_id, :id
       param :name, :string, required: true, length: [min: 2, max: 255], doc: [example: "Mario"]
       param :email, :string, required: true, format: ~r/@/, length: [min: 6], doc: Type.email()
@@ -158,6 +159,8 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
                example: %{a: 1}
              }
            } == Sample.schema().properties
+
+    refute Map.has_key?(Sample.schema().properties, :hidden_field)
   end
 
   test "example is generated accordingly to properties" do
@@ -188,6 +191,8 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
              type_id: "string",
              uploaded_at: "2023-04-03T10:21:00Z"
            } == Sample.schema().example
+
+    refute Map.has_key?(Sample.schema().example, :hidden_field)
   end
 
   test "required fields list is generated correctly" do
