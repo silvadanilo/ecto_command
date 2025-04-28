@@ -8,8 +8,8 @@ defmodule Unit.EctoCommand.OpenApi.TypeTest do
 
   describe "example_for/1 generates a valid example" do
     test "for arrays of enums" do
-      assert [1, 2] == Type.example_for(%Schema{type: :array, items: [%{type: :integer, enum: [1, 2, 3]}]})
-      assert ["a", "b"] == Type.example_for(%Schema{type: :array, items: [%{type: :string, enum: ["a", "b", "c"]}]})
+      assert [1, 2] == Type.example_for(%Schema{type: :array, items: %{type: :integer, enum: [1, 2, 3]}})
+      assert ["a", "b"] == Type.example_for(%Schema{type: :array, items: %{type: :string, enum: ["a", "b", "c"]}})
     end
 
     test "for enums" do
@@ -138,16 +138,16 @@ defmodule Unit.EctoCommand.OpenApi.TypeTest do
     end
 
     test "for arrays without inner type example and without default" do
-      assert [] == Type.example_for(%Schema{type: :array, items: [%Schema{type: :integer}]})
+      assert [] == Type.example_for(%Schema{type: :array, items: %Schema{type: :integer}})
     end
 
     test "for arrays with inner type example and without default" do
-      assert [1] == Type.example_for(%Schema{type: :array, items: [%Schema{type: :integer, example: 1}]})
+      assert [1] == Type.example_for(%Schema{type: :array, items: %Schema{type: :integer, example: 1}})
     end
 
     test "for arrays with inner type example and with default" do
       assert [1, 2, 3] ==
-               Type.example_for(%Schema{type: :array, items: [%Schema{type: :integer, example: 1}], default: [1, 2, 3]})
+               Type.example_for(%Schema{type: :array, items: %Schema{type: :integer, example: 1}, default: [1, 2, 3]})
     end
 
     test "for object" do
@@ -159,7 +159,7 @@ defmodule Unit.EctoCommand.OpenApi.TypeTest do
           id: %OpenApiSpex.Schema{type: :string},
           name: %OpenApiSpex.Schema{type: :string},
           type: %OpenApiSpex.Schema{enum: ["a", "b"], type: :string, example: "a"},
-          tags: %OpenApiSpex.Schema{type: :array, items: [%OpenApiSpex.Schema{type: :string}], default: []},
+          tags: %OpenApiSpex.Schema{type: :array, items: %OpenApiSpex.Schema{type: :string}, default: []},
           non_required_id: %OpenApiSpex.Schema{type: :string}
         }
       }

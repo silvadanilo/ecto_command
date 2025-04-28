@@ -39,7 +39,7 @@ defmodule EctoCommand.OpenApi.Type do
     [example: true] ++ options
   end
 
-  def example_for(%Schema{type: :array, items: [%{enum: values}]} = _schema) when is_list(values),
+  def example_for(%Schema{type: :array, items: %{enum: values}} = _schema) when is_list(values),
     do: Enum.take(values, 2)
 
   def example_for(%Schema{default: default}) when not is_nil(default), do: default
@@ -49,8 +49,8 @@ defmodule EctoCommand.OpenApi.Type do
   def example_for(%Schema{type: :string, format: :password}), do: Keyword.get(password(), :example)
   def example_for(%Schema{type: :integer} = schema), do: trunc(number_example(schema))
   def example_for(%Schema{type: :number} = schema), do: number_example(schema)
-  def example_for(%Schema{type: :array, items: [%{example: nil}]}), do: []
-  def example_for(%Schema{type: :array, items: [%{example: example}]}), do: [example]
+  def example_for(%Schema{type: :array, items: %{example: nil}}), do: []
+  def example_for(%Schema{type: :array, items: %{example: example}}), do: [example]
 
   def example_for(%Schema{type: :object, properties: properties}) do
     Map.new(properties, fn {name, %Schema{example: example} = schema} ->
