@@ -119,25 +119,25 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
              a_date: %OpenApiSpex.Schema{type: :string, format: :date, example: "2020-04-20"},
              a_list_of_enums: %OpenApiSpex.Schema{
                type: :array,
-               items: [%OpenApiSpex.Schema{enum: ["a", "b", "c"], type: :string, example: "a"}],
+               items: %OpenApiSpex.Schema{enum: ["a", "b", "c"], type: :string, example: "a"},
                example: ["a", "b"],
                description: "A list of enums"
              },
              a_list_of_strings_a: %OpenApiSpex.Schema{
                type: :array,
-               items: [%OpenApiSpex.Schema{type: :string, example: ""}],
+               items: %OpenApiSpex.Schema{type: :string, example: ""},
                default: [],
                example: []
              },
              a_list_of_strings_b: %OpenApiSpex.Schema{
                type: :array,
-               items: [%OpenApiSpex.Schema{type: :string, example: ""}],
+               items: %OpenApiSpex.Schema{type: :string, example: ""},
                description: "A list of strings A",
                example: [""]
              },
              a_list_of_strings_c: %OpenApiSpex.Schema{
                type: :array,
-               items: [%OpenApiSpex.Schema{enum: ["a", "b", "c"], type: :string, example: "a"}],
+               items: %OpenApiSpex.Schema{enum: ["a", "b", "c"], type: :string, example: "a"},
                example: ["a", "b"],
                description: "A list of strings B"
              },

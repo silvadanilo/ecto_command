@@ -126,7 +126,7 @@ defmodule EctoCommand.OpenApi do
   defp parse_option({:required, _}, acc), do: acc
 
   defp base_schema({:array, inner_type}, opts) do
-    %{type: :array, items: [schema_for(inner_type, Keyword.drop(opts, [:doc, :default]))]}
+    %{type: :array, items: schema_for(inner_type, Keyword.drop(opts, [:doc, :default]))}
   end
 
   defp base_schema(type, _opts), do: base_schema(type)
