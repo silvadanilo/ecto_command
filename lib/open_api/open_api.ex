@@ -101,7 +101,7 @@ defmodule EctoCommand.OpenApi do
         |> Map.put(:exclusiveMaximum, false)
 
       {:not_equal_to, value}, acc ->
-        Map.put(acc, :not, %{enum: [value]})
+        Map.put(acc, :not, %OpenApiSpex.Schema{enum: [value]})
     end)
   end
 
