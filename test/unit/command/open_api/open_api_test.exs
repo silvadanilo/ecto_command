@@ -59,7 +59,7 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
                type: :integer,
                example: 20
              },
-             an_integer_b: %OpenApiSpex.Schema{type: :integer, not: %{enum: [20]}, example: 21},
+             an_integer_b: %OpenApiSpex.Schema{type: :integer, not: %OpenApiSpex.Schema{enum: [20]}, example: 21},
              an_integer_c: %OpenApiSpex.Schema{
                exclusiveMaximum: false,
                exclusiveMinimum: true,
