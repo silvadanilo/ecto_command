@@ -129,7 +129,13 @@ defmodule EctoCommand.OpenApi do
     %{type: :array, items: schema_for(inner_type, Keyword.drop(opts, [:doc, :default]))}
   end
 
-  defp base_schema(type, _opts), do: base_schema(type)
+  defp base_schema(type, _opts) do
+    if is_atom(type) and function_exported?(type, :schema, 0) do
+      Map.from_struct(type.schema())
+    else
+      base_schema(type)
+    end
+  end
 
   defp base_schema(:id), do: %{type: :integer}
   defp base_schema(type) when type in [:float, :decimal], do: %{type: :number}

@@ -54,6 +54,11 @@ defmodule EctoCommand do
     :subset
   ]
 
+  @valid_embed_validators [
+    :required,
+    :change
+  ]
+
   @doc false
   defmacro __using__(_) do
     quote do
@@ -67,6 +72,7 @@ defmodule EctoCommand do
           internal: 2,
           internal: 3,
           embeds_one: 3,
+          embeds_one: 4,
           cast_embedded_fields: 2
         ]
 
@@ -259,7 +265,7 @@ defmodule EctoCommand do
         __MODULE__,
         unquote(name),
         unquote(type),
-        opts |> Keyword.drop(unquote(@command_options ++ @valid_validators))
+        Keyword.drop(opts, unquote(@command_options ++ @valid_validators))
       )
     end
   end
@@ -314,6 +320,20 @@ defmodule EctoCommand do
     end
   end
 
+  defmacro embeds_one(name, schema, opts, do: block) when is_list(opts) do
+    quote do
+      defmodule unquote(schema) do
+        use EctoCommand
+
+        command do
+          unquote(block)
+        end
+      end
+
+      unquote(embed_submodule(name, schema, opts))
+    end
+  end
+
   defmacro embeds_one(name, schema, do: block) do
     quote do
       defmodule unquote(schema) do
@@ -324,8 +344,12 @@ defmodule EctoCommand do
         end
       end
 
-      Ecto.Schema.embeds_one(unquote(name), unquote(schema))
+      unquote(embed_submodule(name, schema, []))
     end
+  end
+
+  defmacro embeds_one(name, schema, opts) when is_list(opts) do
+    embed_submodule(name, schema, opts)
   end
 
   @doc false
@@ -364,6 +388,32 @@ defmodule EctoCommand do
         |> Pipeline.respond({:error, error})
         |> Pipeline.chain(:invalid, pipeline.middlewares)
         |> Pipeline.halt()
+    end
+  end
+
+  def embed_submodule(name, schema, opts) do
+    quote do
+      opts = unquote(opts)
+
+      Module.put_attribute(__MODULE__, :command_fields, {unquote(name), unquote(schema), opts})
+
+      Enum.each(unquote(@valid_embed_validators), fn validator ->
+        if opts[validator] !== nil && opts[validator] !== false do
+          parsed_opts = if opts[validator] == true, do: [], else: opts[validator]
+
+          Module.put_attribute(
+            __MODULE__,
+            :validators,
+            {unquote(name), validator, Macro.escape(parsed_opts)}
+          )
+        end
+      end)
+
+      Ecto.Schema.embeds_one(
+        unquote(name),
+        unquote(schema),
+        Keyword.drop(opts, unquote(@command_options ++ @valid_embed_validators))
+      )
     end
   end
 end

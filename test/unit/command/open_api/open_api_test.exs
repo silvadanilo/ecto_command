@@ -4,6 +4,18 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
   use ExUnit.Case, async: true
   use EctoCommand.Test.CommandCase
 
+  defmodule EmbeddedSample do
+    @moduledoc false
+
+    use EctoCommand
+    use EctoCommand.OpenApi, title: "EmbeddedSample"
+
+    command do
+      param :id, :string, doc: Type.uuid()
+      param :title, :string, required: true, length: [min: 5], doc: [example: "A title"]
+    end
+  end
+
   defmodule Sample do
     @moduledoc false
 
@@ -42,6 +54,8 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
       param :a_list_of_enums, {:array, Ecto.Enum}, values: [:a, :b, :c], doc: [description: "A list of enums"]
       param :a_map, :map, doc: [description: "A map"], default: %{}
       param :a_map_with_int_values, {:map, :integer}, doc: [description: "A map with integer values"], default: %{a: 1}
+
+      embeds_one :embedded_sample, EmbeddedSample, doc: [description: "A embedded sample"]
 
       internal :triggered_by, :map
       internal :uploaded_by, :string
@@ -156,6 +170,22 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
                description: "A map with integer values",
                default: %{a: 1},
                example: %{a: 1}
+             },
+             embedded_sample: %OpenApiSpex.Schema{
+               title: "EmbeddedSample",
+               required: [:title],
+               type: :object,
+               description: "A embedded sample",
+               properties: %{
+                 id: %OpenApiSpex.Schema{
+                   type: :string,
+                   description: "UUID",
+                   format: :uuid,
+                   example: "02ef9c5f-29e6-48fc-9ec3-7ed57ed351f6"
+                 },
+                 title: %OpenApiSpex.Schema{minLength: 5, type: :string, example: "A title"}
+               },
+               example: %{id: "02ef9c5f-29e6-48fc-9ec3-7ed57ed351f6", title: "A title"}
              }
            } == Sample.schema().properties
 
@@ -188,7 +218,8 @@ defmodule Unit.EctoCommand.OpenApi.OpenApiTest do
              name: "Mario",
              phone: "(425) 123-4567",
              type_id: "",
-             uploaded_at: "2020-04-20T16:20:00Z"
+             uploaded_at: "2020-04-20T16:20:00Z",
+             embedded_sample: %{id: "02ef9c5f-29e6-48fc-9ec3-7ed57ed351f6", title: "A title"}
            } == Sample.schema().example
 
     refute Map.has_key?(Sample.schema().example, :hidden_field)
